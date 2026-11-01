@@ -39,11 +39,11 @@ import { TypographySection } from "./TypographySettings";
 import { ThreadDetailsItemsRow } from "./ThreadDetailsItemsRow";
 
 const ENVIRONMENT_IDENTIFICATION_LABELS: Record<EnvironmentIdentificationMode, string> = {
-  artwork: "Artwork",
-  "nightly-artwork": "Nightly artwork",
-  "dev-artwork": "Dev artwork",
-  pill: "Version pill",
-  none: "None",
+  artwork: "Arte visual",
+  "nightly-artwork": "Arte visual Nightly",
+  "dev-artwork": "Arte visual Dev",
+  pill: "Pílula de versão",
+  none: "Nenhum",
 };
 
 // The default "artwork" follows the running channel, so it is labeled as that channel's art,
@@ -53,36 +53,36 @@ function environmentIdentificationOptions(
 ): ReadonlyArray<readonly [EnvironmentIdentificationMode, string]> {
   if (stageVariant === "dev") {
     return [
-      ["artwork", "Dev artwork"],
-      ["nightly-artwork", "Nightly artwork"],
-      ["pill", "Version pill"],
-      ["none", "None"],
+      ["artwork", "Arte visual Dev"],
+      ["nightly-artwork", "Arte visual Nightly"],
+      ["pill", "Pílula de versão"],
+      ["none", "Nenhum"],
     ];
   }
   if (stageVariant === "nightly") {
     return [
-      ["artwork", "Nightly artwork"],
-      ["dev-artwork", "Dev artwork"],
-      ["pill", "Version pill"],
-      ["none", "None"],
+      ["artwork", "Arte visual Nightly"],
+      ["dev-artwork", "Arte visual Dev"],
+      ["pill", "Pílula de versão"],
+      ["none", "Nenhum"],
     ];
   }
   return [
-    ["artwork", "None"],
-    ["nightly-artwork", "Nightly artwork"],
-    ["dev-artwork", "Dev artwork"],
+    ["artwork", "Nenhum"],
+    ["nightly-artwork", "Arte visual Nightly"],
+    ["dev-artwork", "Arte visual Dev"],
   ];
 }
 
 const CHAT_WIDTH_LABELS: Record<ChatWidth, string> = {
-  comfortable: "Comfortable",
-  wide: "Wide",
-  full: "Full",
+  comfortable: "Confortável",
+  wide: "Ampla",
+  full: "Completa",
 };
 
 const EFFORT_DISPLAY_LABELS: Record<EffortDisplay, string> = {
-  label: "Word",
-  bars: "Bars",
+  label: "Texto",
+  bars: "Barras",
 };
 
 export function AppearanceSettingsPanel() {
@@ -243,7 +243,7 @@ export function AppearanceSettingsPanel() {
 
         <SettingsRow
           {...searchableSetting("setting-glass-opacity")}
-          description="Higher values make menus, dialogs, and the composer more solid."
+          description="Valores maiores tornam menus, caixas de diálogo e o editor mais sólidos."
           resetAction={
             settings.glassOpacity !== DEFAULT_UNIFIED_SETTINGS.glassOpacity ? (
               <SettingResetButton
@@ -289,7 +289,7 @@ export function AppearanceSettingsPanel() {
 
         <SettingsRow
           {...searchableSetting("chat-width")}
-          description="Set how wide messages and the composer can grow on large screens."
+          description="Defina a largura máxima das mensagens e do editor em telas grandes."
           resetAction={
             settings.chatWidth !== DEFAULT_UNIFIED_SETTINGS.chatWidth ? (
               <SettingResetButton
@@ -311,9 +311,9 @@ export function AppearanceSettingsPanel() {
                   <SelectValue>{CHAT_WIDTH_LABELS[settings.chatWidth]}</SelectValue>
                 </SelectTrigger>
                 <SelectPopup align="end" alignItemWithTrigger={false}>
-                  <SelectItem value="comfortable">Comfortable (default)</SelectItem>
-                  <SelectItem value="wide">Wide</SelectItem>
-                  <SelectItem value="full">Full</SelectItem>
+                  <SelectItem value="comfortable">Confortável (padrão)</SelectItem>
+                  <SelectItem value="wide">Ampla</SelectItem>
+                  <SelectItem value="full">Completa</SelectItem>
                 </SelectPopup>
               </Select>
             </div>
@@ -322,7 +322,7 @@ export function AppearanceSettingsPanel() {
         <ThreadDetailsItemsRow />
         <SettingsRow
           {...searchableSetting("effort-display")}
-          description="Show reasoning effort in the composer as its name, such as High, or as bars."
+          description="Mostre o esforço de raciocínio no editor pelo nome, como Alto, ou como barras."
           resetAction={
             settings.effortDisplay !== DEFAULT_UNIFIED_SETTINGS.effortDisplay ? (
               <SettingResetButton
@@ -346,8 +346,8 @@ export function AppearanceSettingsPanel() {
                   <SelectValue>{EFFORT_DISPLAY_LABELS[settings.effortDisplay]}</SelectValue>
                 </SelectTrigger>
                 <SelectPopup align="end" alignItemWithTrigger={false}>
-                  <SelectItem value="label">Word (default)</SelectItem>
-                  <SelectItem value="bars">Bars</SelectItem>
+                  <SelectItem value="label">Texto (padrão)</SelectItem>
+                  <SelectItem value="bars">Barras</SelectItem>
                 </SelectPopup>
               </Select>
             </div>
@@ -355,7 +355,7 @@ export function AppearanceSettingsPanel() {
         />
         <SettingsRow
           {...searchableSetting("math-rendering")}
-          description="Typeset LaTeX math, such as $x^2$ or \[x^2\], in messages and Markdown previews. The composer keeps TeX source editable."
+          description="Renderiza fórmulas matemáticas em LaTeX, como $x^2$ ou \[x^2\], em mensagens e prévias Markdown. O editor mantém o código TeX editável."
           resetAction={
             settings.mathRenderingEnabled !== DEFAULT_UNIFIED_SETTINGS.mathRenderingEnabled ? (
               <SettingResetButton

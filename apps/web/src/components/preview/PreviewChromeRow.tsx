@@ -4,8 +4,12 @@ import {
   ArrowRight,
   Camera,
   ExternalLink,
+  Laptop,
+  Monitor,
   MousePointerClick,
   PictureInPicture2,
+  Smartphone,
+  Tablet,
 } from "lucide-react";
 import {
   type FormEvent,
@@ -44,6 +48,8 @@ interface Props {
   pickActive?: boolean | undefined;
   pickDisabled?: boolean | undefined;
   pickDisabledReason?: string | undefined;
+  viewportMode?: "web" | "laptop" | "tablet" | "mobile" | undefined;
+  onSelectViewportMode?: ((mode: "web" | "laptop" | "tablet" | "mobile") => void) | undefined;
   trailingActions?: ReactNode;
   leadingActions?: ReactNode;
 }
@@ -73,6 +79,8 @@ export function PreviewChromeRow({
   pickActive,
   pickDisabled,
   pickDisabledReason,
+  viewportMode,
+  onSelectViewportMode,
   trailingActions,
   leadingActions,
 }: Props) {
@@ -209,6 +217,86 @@ export function PreviewChromeRow({
             </InputGroupAddon>
           ) : null}
         </InputGroup>
+
+        {onSelectViewportMode ? (
+          <div
+            className="flex items-center gap-0.5 rounded-md border border-border/50 bg-muted/40 p-0.5"
+            role="radiogroup"
+            aria-label="Modo de responsividade"
+          >
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant={viewportMode === "web" ? "secondary" : "ghost"}
+                    size="icon-xs"
+                    onClick={() => onSelectViewportMode("web")}
+                    aria-label="Web (100% largura total)"
+                    aria-checked={viewportMode === "web"}
+                    type="button"
+                  />
+                }
+              >
+                <Monitor className="size-3.5" />
+              </TooltipTrigger>
+              <TooltipPopup>Web (100% largura total)</TooltipPopup>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant={viewportMode === "laptop" ? "secondary" : "ghost"}
+                    size="icon-xs"
+                    onClick={() => onSelectViewportMode("laptop")}
+                    aria-label="Notebook (1280 × 800)"
+                    aria-checked={viewportMode === "laptop"}
+                    type="button"
+                  />
+                }
+              >
+                <Laptop className="size-3.5" />
+              </TooltipTrigger>
+              <TooltipPopup>Notebook (1280 × 800)</TooltipPopup>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant={viewportMode === "tablet" ? "secondary" : "ghost"}
+                    size="icon-xs"
+                    onClick={() => onSelectViewportMode("tablet")}
+                    aria-label="Tablet (768 × 1024)"
+                    aria-checked={viewportMode === "tablet"}
+                    type="button"
+                  />
+                }
+              >
+                <Tablet className="size-3.5" />
+              </TooltipTrigger>
+              <TooltipPopup>Tablet (768 × 1024)</TooltipPopup>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant={viewportMode === "mobile" ? "secondary" : "ghost"}
+                    size="icon-xs"
+                    onClick={() => onSelectViewportMode("mobile")}
+                    aria-label="Mobile (390 × 844)"
+                    aria-checked={viewportMode === "mobile"}
+                    type="button"
+                  />
+                }
+              >
+                <Smartphone className="size-3.5" />
+              </TooltipTrigger>
+              <TooltipPopup>Mobile (390 × 844)</TooltipPopup>
+            </Tooltip>
+          </div>
+        ) : null}
 
         {onPickElement ? (
           <Tooltip>

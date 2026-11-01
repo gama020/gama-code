@@ -23,7 +23,7 @@ export function NotificationSettings() {
       {...searchableSetting("thread-notifications")}
       description={
         permissionMessage ??
-        "System alerts when a thread finishes, fails, or needs input or approval. Applies to this device while T3 Code is open."
+        "Alertas do sistema quando uma conversa terminar, falhar ou precisar de aprovação. Aplica-se a este dispositivo enquanto o Gama Os estiver aberto."
       }
       control={
         <Select

@@ -73,16 +73,16 @@ const checkForUpdatesFromMenu = Effect.gen(function* () {
   if (updateState.status === "up-to-date") {
     yield* electronDialog.showMessageBox({
       type: "info",
-      title: "You're up to date!",
-      message: `T3 Code ${updateState.currentVersion} is currently the newest version available.`,
+      title: "Você está atualizado!",
+      message: `Gama Os ${updateState.currentVersion} é a versão mais recente disponível.`,
       buttons: ["OK"],
     });
   } else if (updateState.status === "error") {
     yield* electronDialog.showMessageBox({
       type: "warning",
-      title: "Update check failed",
-      message: "Could not check for updates.",
-      detail: updateState.message ?? "An unknown error occurred. Please try again later.",
+      title: "Falha ao verificar atualizações",
+      message: "Não foi possível verificar atualizações.",
+      detail: updateState.message ?? "Ocorreu um erro desconhecido. Tente novamente mais tarde.",
       buttons: ["OK"],
     });
   }
@@ -163,38 +163,38 @@ export const make = Effect.gen(function* () {
       template.push({
         label: environment.displayName,
         submenu: [
-          { role: "about", label: `About ${environment.displayName}` },
+          { role: "about", label: `Sobre o ${environment.displayName}` },
           {
-            label: "Check for Updates...",
+            label: "Verificar atualizações...",
             click: checkForUpdatesClick,
           },
           { type: "separator" },
           {
-            label: "Settings...",
+            label: "Configurações...",
             accelerator: "CmdOrCtrl+,",
             click: settingsClick,
           },
           { type: "separator" },
           { role: "services" },
           { type: "separator" },
-          { role: "hide", label: `Hide ${environment.displayName}` },
-          { role: "hideOthers" },
-          { role: "unhide" },
+          { role: "hide", label: `Ocultar ${environment.displayName}` },
+          { role: "hideOthers", label: "Ocultar outros" },
+          { role: "unhide", label: "Mostrar tudo" },
           { type: "separator" },
-          { role: "quit", label: `Quit ${environment.displayName}` },
+          { role: "quit", label: `Encerrar ${environment.displayName}` },
         ],
       });
     }
 
     template.push(
       {
-        label: "File",
+        label: "Arquivo",
         submenu: [
           ...(environment.platform === "darwin"
             ? []
             : [
                 {
-                  label: "Settings...",
+                  label: "Configurações...",
                   accelerator: "CmdOrCtrl+,",
                   click: settingsClick,
                 },
@@ -202,58 +202,61 @@ export const make = Effect.gen(function* () {
               ]),
           // Cmd/Ctrl+W belongs to the renderer's tab close; it must never close the window.
           environment.platform === "darwin"
-            ? { label: "Close Window", click: (_item, window) => window?.close() }
-            : { role: "quit" },
+            ? { label: "Fechar janela", click: (_item, window) => window?.close() }
+            : { role: "quit", label: "Encerrar" },
         ],
       },
       {
-        label: "Edit",
+        label: "Editar",
         submenu: [
-          { role: "undo" },
-          { role: "redo" },
+          { role: "undo", label: "Desfazer" },
+          { role: "redo", label: "Refazer" },
           { type: "separator" },
-          { role: "cut" },
-          { role: "copy" },
-          { role: "paste" },
+          { role: "cut", label: "Recortar" },
+          { role: "copy", label: "Copiar" },
+          { role: "paste", label: "Colar" },
           {
-            label: "Paste as Text",
+            label: "Colar como texto simples",
             accelerator: "CmdOrCtrl+Shift+V",
             click: pasteAsTextClick,
           },
-          { role: "delete" },
+          { role: "delete", label: "Excluir" },
           { type: "separator" },
-          { role: "selectAll" },
+          { role: "selectAll", label: "Selecionar tudo" },
           ...(environment.platform === "darwin"
             ? [
                 { type: "separator" as const },
                 {
-                  label: "Speech",
-                  submenu: [{ role: "startSpeaking" as const }, { role: "stopSpeaking" as const }],
+                  label: "Fala",
+                  submenu: [
+                    { role: "startSpeaking" as const, label: "Iniciar fala" },
+                    { role: "stopSpeaking" as const, label: "Parar fala" },
+                  ],
                 },
               ]
             : []),
         ],
       },
       {
-        label: "View",
+        label: "Visualizar",
         submenu: [
           /* Native reload/DevTools/zoom roles target focused guests; these commands must target the app. */
-          { label: "Reload", accelerator: "CmdOrCtrl+R", click: mainContentsClick("reload") },
+          { label: "Recarregar", accelerator: "CmdOrCtrl+R", click: mainContentsClick("reload") },
           {
-            label: "Force Reload",
+            label: "Forçar recarregamento",
             accelerator: "Shift+CmdOrCtrl+R",
             click: mainContentsClick("forceReload"),
           },
           {
-            label: "Toggle Developer Tools",
+            label: "Alternar ferramentas de desenvolvedor",
             accelerator: environment.platform === "darwin" ? "Alt+Command+I" : "Ctrl+Shift+I",
             click: mainContentsClick("toggleDevTools"),
           },
           { type: "separator" },
-          { label: "Actual Size", accelerator: "CmdOrCtrl+0", click: zoomClick("reset") },
-          { label: "Zoom In", accelerator: "CmdOrCtrl+=", click: zoomClick("in") },
+          { label: "Tamanho real", accelerator: "CmdOrCtrl+0", click: zoomClick("reset") },
+          { label: "Aumentar zoom", accelerator: "CmdOrCtrl+=", click: zoomClick("in") },
           {
-            label: "Zoom In",
+            label: "Aumentar zoom",
             accelerator: "CmdOrCtrl+Plus",
             visible: false,
             click: zoomClick("in"),
@@ -261,53 +264,56 @@ export const make = Effect.gen(function* () {
           ...(environment.platform === "darwin"
             ? [
                 {
-                  label: "Zoom In",
+                  label: "Aumentar zoom",
                   accelerator: "CmdOrCtrl+Shift+=",
                   visible: false,
                   click: zoomClick("in"),
                 },
               ]
             : []),
-          { label: "Zoom Out", accelerator: "CmdOrCtrl+-", click: zoomClick("out") },
+          { label: "Diminuir zoom", accelerator: "CmdOrCtrl+-", click: zoomClick("out") },
           // Keypad codes do not match number-row accelerators.
           {
-            label: "Actual Size",
+            label: "Tamanho real",
             accelerator: "CmdOrCtrl+num0",
             visible: false,
             click: zoomClick("reset"),
           },
           {
-            label: "Zoom In",
+            label: "Aumentar zoom",
             accelerator: "CmdOrCtrl+numadd",
             visible: false,
             click: zoomClick("in"),
           },
           {
-            label: "Zoom Out",
+            label: "Diminuir zoom",
             accelerator: "CmdOrCtrl+numsub",
             visible: false,
             click: zoomClick("out"),
           },
           { type: "separator" },
-          { role: "togglefullscreen" },
+          { role: "togglefullscreen", label: "Alternar tela cheia" },
         ],
       },
       {
         // Electron's default Window submenu adds a Ctrl+W close role off macOS.
-        role: "windowMenu",
+        label: "Janela",
         submenu: [
-          { role: "minimize" },
-          { role: "zoom" },
+          { role: "minimize", label: "Minimizar" },
+          { role: "zoom", label: "Zoom" },
           ...(environment.platform === "darwin"
-            ? [{ type: "separator" as const }, { role: "front" as const }]
+            ? [
+                { type: "separator" as const },
+                { role: "front" as const, label: "Trazer todas para a frente" },
+              ]
             : []),
         ],
       },
       {
-        role: "help",
+        label: "Ajuda",
         submenu: [
           {
-            label: "Check for Updates...",
+            label: "Verificar atualizações...",
             click: checkForUpdatesClick,
           },
         ],

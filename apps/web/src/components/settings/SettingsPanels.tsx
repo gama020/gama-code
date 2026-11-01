@@ -107,37 +107,37 @@ import { awaitsTrackSwitch, channelSwitchLabel } from "../sidebar/updateEverythi
 import { isHostedByThisApp } from "../sidebar/useUpdateEverything";
 
 const RESPONSE_STREAMING_MODE_LABELS: Record<ResponseStreamingMode, string> = {
-  turn: "Wait for the full response",
-  paragraph: "Show finished paragraphs",
+  turn: "Aguardar resposta completa",
+  paragraph: "Mostrar parágrafos concluídos",
 };
 
 const RESPONSE_STREAMING_MODE_DESCRIPTIONS: Record<ResponseStreamingMode, string> = {
-  turn: "Text appears once the agent finishes its turn.",
-  paragraph: "Each paragraph or code block appears as soon as it is complete.",
+  turn: "O texto aparece após o agente concluir o turno.",
+  paragraph: "Cada parágrafo ou bloco de código aparece assim que estiver concluído.",
 };
 
 const SIDEBAR_PROJECT_SORT_ORDER_LABELS: Record<SidebarProjectSortOrder, string> = {
-  updated_at: "Last user message",
-  created_at: "Created at",
+  updated_at: "Última mensagem do usuário",
+  created_at: "Data de criação",
   manual: "Manual",
 };
 const isSidebarProjectSortOrder = Schema.is(SidebarProjectSortOrder);
 
 const TIMESTAMP_FORMAT_LABELS = {
-  locale: "System default",
-  "12-hour": "12-hour",
-  "24-hour": "24-hour",
+  locale: "Padrão do sistema",
+  "12-hour": "12 horas",
+  "24-hour": "24 horas",
 } as const;
 
 const DIFF_LAYOUT_LABELS: Record<DiffLayout, string> = {
-  stacked: "Stacked",
-  split: "Split",
+  stacked: "Empilhado",
+  split: "Lado a lado",
 };
 
 const QUIT_CONFIRMATION_MODE_LABELS: Record<QuitConfirmationMode, string> = {
-  direct: "Direct",
-  hold: "Hold",
-  "double-click": "Double press",
+  direct: "Imediato",
+  hold: "Segurar tecla",
+  "double-click": "Pressionar duas vezes",
 };
 
 const DEFAULT_DRIVER_KIND = ProviderDriverKind.make("codex");
@@ -550,9 +550,10 @@ export function useSettingsRestore(onRestored?: () => void) {
     if (changedSettingLabels.length === 0) return;
     const api = readLocalApi();
     const confirmed = await (api ?? ensureLocalApi()).dialogs.confirm(
-      ["Restore default settings?", `This will reset: ${changedSettingLabels.join(", ")}.`].join(
-        "\n",
-      ),
+      [
+        "Restaurar configurações padrão?",
+        `Isso redefinirá: ${changedSettingLabels.join(", ")}.`,
+      ].join("\n"),
       { variant: "destructive" },
     );
     if (!confirmed) return;
@@ -571,8 +572,8 @@ export function useSettingsRestore(onRestored?: () => void) {
       toastManager.add(
         stackedThreadToast({
           type: "error",
-          title: "Couldn’t restore theme settings",
-          description: "Try again.",
+          title: "Não foi possível restaurar as configurações de tema",
+          description: "Tente novamente.",
         }),
       );
     };
@@ -721,7 +722,7 @@ export function LegacyFeaturesSection() {
   const updateSettings = useUpdateScopedSettings();
 
   return (
-    <SettingsSection id="legacy-features" title="Legacy">
+    <SettingsSection id="legacy-features" title="Recursos legados">
       <SettingsRow
         {...searchableSetting("legacy-plan-mode")}
         description="Restore Build/Plan, /plan, /default, and Shift+Tab. Off uses build mode."
@@ -761,11 +762,11 @@ export function GeneralSettingsPanel() {
 
   return (
     <SettingsPageContainer>
-      <SettingsSection id="notifications" title="Notifications">
+      <SettingsSection id="notifications" title="Notificações">
         <NotificationSettings />
         <SettingsRow
           {...searchableSetting("in-app-notifications")}
-          description="Show a toast when another thread finishes, fails, or needs input or approval while this app has focus."
+          description="Exibe um toast quando outra conversa finalizar, falhar ou precisar de aprovação enquanto este aplicativo estiver em foco."
           control={
             <Switch
               checked={settings.inAppNotificationsEnabled}
@@ -776,10 +777,10 @@ export function GeneralSettingsPanel() {
         />
       </SettingsSection>
 
-      <SettingsSection id="sidebar" title="Sidebar">
+      <SettingsSection id="sidebar" title="Barra lateral">
         <SettingsRow
           {...searchableSetting("project-grouping")}
-          description="Combine matching repositories across environments."
+          description="Agrupa repositórios correspondentes entre diferentes ambientes."
           resetAction={
             settings.sidebarProjectGroupingMode !==
             DEFAULT_UNIFIED_SETTINGS.sidebarProjectGroupingMode ? (
@@ -814,7 +815,7 @@ export function GeneralSettingsPanel() {
         />
         <SettingsRow
           {...searchableSetting("project-order")}
-          description="Order of projects in the sidebar project picker and command palette."
+          description="Ordem dos projetos no seletor da barra lateral e na paleta de comandos."
           resetAction={
             settings.sidebarProjectSortOrder !==
             DEFAULT_UNIFIED_SETTINGS.sidebarProjectSortOrder ? (
@@ -854,7 +855,7 @@ export function GeneralSettingsPanel() {
         />
         <SettingsRow
           {...searchableSetting("working-shelf")}
-          description="Fold working and monitoring threads into a Working section. They return to the top of the inbox when they need you. The boring sidebar in Labs has no Working section."
+          description="Recolhe conversas ativas e em monitoramento em uma seção Em andamento. Elas retornam ao topo da caixa de entrada quando precisarem de você."
           resetAction={
             settings.sidebarWorkingShelfEnabled !==
             DEFAULT_UNIFIED_SETTINGS.sidebarWorkingShelfEnabled ? (
@@ -880,10 +881,10 @@ export function GeneralSettingsPanel() {
         />
       </SettingsSection>
 
-      <SettingsSection id="confirmations" title="Confirmations">
+      <SettingsSection id="confirmations" title="Confirmações">
         <SettingsRow
           {...searchableSetting("unpin-confirmation")}
-          description="Ask before unpinning a thread from the pinned section."
+          description="Pede confirmação antes de desafixar uma conversa da seção fixada."
           resetAction={
             settings.confirmThreadUnpin !== DEFAULT_UNIFIED_SETTINGS.confirmThreadUnpin ? (
               <SettingResetButton
@@ -908,7 +909,7 @@ export function GeneralSettingsPanel() {
         />
         <SettingsRow
           {...searchableSetting("archive-confirmation")}
-          description="Require a second click on the inline archive action before a thread is archived."
+          description="Exige um segundo clique no botão de arquivar antes de arquivar uma conversa."
           resetAction={
             settings.confirmThreadArchive !== DEFAULT_UNIFIED_SETTINGS.confirmThreadArchive ? (
               <SettingResetButton
@@ -933,7 +934,7 @@ export function GeneralSettingsPanel() {
         />
         <SettingsRow
           {...searchableSetting("delete-confirmation")}
-          description="Ask before deleting a thread and its chat history."
+          description="Pede confirmação antes de excluir permanentemente uma conversa e seu histórico."
           resetAction={
             settings.confirmThreadDelete !== DEFAULT_UNIFIED_SETTINGS.confirmThreadDelete ? (
               <SettingResetButton
@@ -959,7 +960,7 @@ export function GeneralSettingsPanel() {
         {isElectron ? (
           <SettingsRow
             {...searchableSetting("quit-confirmation")}
-            description="Hold mode also quits on two quick presses."
+            description="O modo segurar também encerra ao pressionar a tecla rapidamente duas vezes."
             resetAction={
               settings.confirmQuit !== DEFAULT_UNIFIED_SETTINGS.confirmQuit ? (
                 <SettingResetButton
@@ -999,7 +1000,7 @@ export function GeneralSettingsPanel() {
         ) : null}
       </SettingsSection>
 
-      <SettingsSection id="display" title="Display">
+      <SettingsSection id="display" title="Exibição">
         <SettingsRow
           {...searchableSetting("time-format")}
           description="System default follows your browser or OS clock preference."
@@ -1058,7 +1059,7 @@ export function ChatSettingsPanel() {
 
   return (
     <SettingsPageContainer>
-      <SettingsSection id="composer" title="Composer">
+      <SettingsSection id="composer" title="Editor (Composer)">
         <SettingsRow
           {...searchableSetting("composer-rich-text")}
           description="Show formatted Markdown as you type."
@@ -1160,7 +1161,7 @@ export function ChatSettingsPanel() {
         </AdvancedSettings>
       </SettingsSection>
 
-      <SettingsSection id="follow-ups" title="Follow-ups">
+      <SettingsSection id="follow-ups" title="Acompanhamentos">
         <SettingsRow
           {...searchableSetting("follow-up-behavior")}
           description={
@@ -1266,7 +1267,7 @@ export function DiffsSettingsPanel() {
 
   return (
     <SettingsPageContainer>
-      <SettingsSection id="diffs" title="Diffs">
+      <SettingsSection id="diffs" title="Diffs e alterações">
         <SettingsRow
           {...searchableSetting("diff-layout")}
           description="Show diffs stacked or side by side. The toggle in the diff toolbar changes this too."
@@ -1527,7 +1528,7 @@ export function ThreadsSettingsPanel() {
 
   return (
     <SettingsPageContainer>
-      <SettingsSection id="new-projects" title="New projects">
+      <SettingsSection id="new-projects" title="Novos projetos">
         <SettingsRow
           serverScoped
           settingKeys={["addProjectBaseDirectory"]}
@@ -1563,12 +1564,12 @@ export function ThreadsSettingsPanel() {
       <ProjectDefaultsSettings category="general" />
 
       {!isProjectScope ? (
-        <SettingsSection id="snooze" title="Snooze">
+        <SettingsSection id="snooze" title="Adiar (Snooze)">
           <SnoozePresetsRow />
         </SettingsSection>
       ) : null}
 
-      <SettingsSection id="usage-limits" title="Usage limits">
+      <SettingsSection id="usage-limits" title="Limites de uso">
         <SettingsRow
           serverScoped
           {...searchableSetting("auto-resume-limited-threads")}
@@ -1604,7 +1605,7 @@ export function ThreadsSettingsPanel() {
       </SettingsSection>
 
       {hasServerTargets ? (
-        <SettingsSection id="auto-settle" title="Auto-settle">
+        <SettingsSection id="auto-settle" title="Finalização automática">
           <SettingsRow
             serverScoped
             settingKeys={["sidebarAutoSettleOnMerge"]}
@@ -1702,7 +1703,7 @@ export function ThreadsSettingsPanel() {
         </SettingsSection>
       ) : null}
 
-      <SettingsSection id="text-generation" title="Text generation">
+      <SettingsSection id="text-generation" title="Geração de texto">
         <SettingsRow
           serverScoped
           settingKeys={["textGenerationModelSelection"]}
@@ -1876,7 +1877,7 @@ export function MaintenanceSettingsPanel() {
 
   return (
     <SettingsPageContainer>
-      <SettingsSection id="updates" title="Updates">
+      <SettingsSection id="updates" title="Atualizações">
         <SettingsRow
           serverScoped
           settingKeys={["enableProviderUpdateChecks"]}
@@ -1945,13 +1946,13 @@ export function MaintenanceSettingsPanel() {
         />
       </SettingsSection>
 
-      <SettingsSection id="background" title="Background activity">
+      <SettingsSection id="background" title="Atividade em segundo plano">
         <BackgroundActivitySettingsRow />
       </SettingsSection>
 
       <StorageCleanupSections />
 
-      <SettingsSection id="diagnostics-section" title="Diagnostics">
+      <SettingsSection id="diagnostics-section" title="Diagnósticos">
         <SettingsRow
           {...searchableSetting("diagnostics")}
           description={
@@ -1979,7 +1980,7 @@ export function MaintenanceSettingsPanel() {
 export function AboutSettingsPanel() {
   return (
     <SettingsPageContainer>
-      <SettingsSection id="about" title="App">
+      <SettingsSection id="about" title="Aplicativo">
         {isElectron || HOSTED_APP_CHANNEL ? (
           <AboutVersionSection />
         ) : (
@@ -1994,7 +1995,7 @@ export function AboutSettingsPanel() {
         <MobileAppSettingsRow />
       </SettingsSection>
 
-      <SettingsSection id="legal" title="Legal">
+      <SettingsSection id="legal" title="Termos e privacidade">
         <SettingsRow
           {...searchableSetting("privacy-policy")}
           description="How we handle your data, including the anonymous usage data T3 Code collects."

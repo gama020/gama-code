@@ -1,6 +1,6 @@
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/models";
 import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environment";
-import { ChevronDownIcon, PlusIcon } from "lucide-react";
+import { ChevronDownIcon, FolderIcon, FolderOpenIcon, PlusIcon } from "lucide-react";
 import { memo } from "react";
 
 import { cn } from "~/lib/utils";
@@ -94,7 +94,17 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
             collapsed && "-rotate-90",
           )}
         />
-        <ProjectFavicon project={group} className="size-4 shrink-0 rounded" />
+        {group.projectIcon?.kind === "emoji" ? (
+          <span className="inline-flex size-4 shrink-0 items-center justify-center text-xs">
+            {group.projectIcon.emoji}
+          </span>
+        ) : group.projectIcon?.kind === "lucide" ? (
+          <ProjectFavicon project={group} className="size-4 shrink-0" />
+        ) : collapsed ? (
+          <FolderIcon className="size-4 shrink-0 text-sidebar-muted-foreground group-hover/project-folder:text-sidebar-foreground transition-colors" />
+        ) : (
+          <FolderOpenIcon className="size-4 shrink-0 text-sidebar-muted-foreground group-hover/project-folder:text-sidebar-foreground transition-colors" />
+        )}
         <span className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/80 group-hover/project-folder:text-sidebar-foreground">
           {group.displayName}
         </span>

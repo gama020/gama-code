@@ -255,8 +255,8 @@ describe("auto-settlement search availability", () => {
     expect(searchSettings("auto-settle", items).map((item) => item.id)).toEqual([
       "auto-settle-inactive-threads",
       "auto-settle-merged-threads",
-      "days-before-auto-settle",
       "keep-threads-with-pull-requests",
+      "days-before-auto-settle",
     ]);
   });
 
@@ -294,7 +294,7 @@ describe("source control host search items", () => {
 
   it("lists a host by its label, its keywords, and its settings fields", () => {
     const items = sourceControlHostSearchItems([UNKNOWN_SOURCE_CONTROL_CLIENT, definition]);
-    expect(items.map((item) => item.title)).toEqual(["Example credentials"]);
+    expect(items.map((item) => item.title)).toEqual(["Credenciais do Example"]);
     expect(searchSettings("sample apitoken", items).map((item) => item.id)).toEqual([
       sourceControlHostSettingsSearchId("example"),
     ]);
@@ -314,7 +314,7 @@ describe("source control host search items", () => {
         },
       },
     ]);
-    expect(items.map((item) => item.title)).toEqual(["Example accounts and token"]);
+    expect(items.map((item) => item.title)).toEqual(["Contas e token do Example"]);
     expect(searchSettings("ex switch accounts", items)).toHaveLength(1);
   });
 

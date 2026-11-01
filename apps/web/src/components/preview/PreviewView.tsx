@@ -366,6 +366,60 @@ export function PreviewView({
     ).catch(() => undefined);
   };
 
+  const activeViewportMode: "web" | "laptop" | "tablet" | "mobile" = (() => {
+    if (!viewport || viewport._tag === "fill") return "web";
+    if (viewport._tag === "preset") {
+      if (viewport.presetId.includes("ipad")) return "tablet";
+      if (
+        viewport.presetId.includes("iphone") ||
+        viewport.presetId.includes("pixel") ||
+        viewport.presetId.includes("samsung")
+      )
+        return "mobile";
+      if (viewport.presetId.includes("desktop")) return "laptop";
+    }
+    if (viewport.width <= 500) return "mobile";
+    if (viewport.width <= 900) return "tablet";
+    if (viewport.width <= 1400) return "laptop";
+    return "web";
+  })();
+
+  const handleSelectViewportMode = (mode: "web" | "laptop" | "tablet" | "mobile") => {
+    if (!runtimeTabId || !tabId) return;
+    const target = { threadRef, tabId, runtimeTabId };
+    if (mode === "web") {
+      void commitBrowserViewportChange(target, FILL_PREVIEW_VIEWPORT).catch(() => undefined);
+      return;
+    }
+    if (mode === "laptop") {
+      void commitBrowserViewportChange(target, {
+        _tag: "preset",
+        presetId: "desktop-hd",
+        width: 1280,
+        height: 800,
+      }).catch(() => undefined);
+      return;
+    }
+    if (mode === "tablet") {
+      void commitBrowserViewportChange(target, {
+        _tag: "preset",
+        presetId: "ipad-mini",
+        width: 768,
+        height: 1024,
+      }).catch(() => undefined);
+      return;
+    }
+    if (mode === "mobile") {
+      void commitBrowserViewportChange(target, {
+        _tag: "preset",
+        presetId: "iphone-12-pro",
+        width: 390,
+        height: 844,
+      }).catch(() => undefined);
+      return;
+    }
+  };
+
   const handleBack = () => {
     if (isServerTab) serverSurfaceRef.current?.history(-1);
     else if (previewBridge && runtimeTabId) void previewBridge.goBack(runtimeTabId);
@@ -883,6 +937,8 @@ export function PreviewView({
         refreshDisabled={refreshDisabled || serverInputDisabled}
         inputDisabled={serverInputDisabled}
         urlInputRef={urlInputRef}
+        viewportMode={activeViewportMode}
+        onSelectViewportMode={tabId ? handleSelectViewportMode : undefined}
         onBack={handleBack}
         onForward={handleForward}
         onRefresh={handleRefresh}
