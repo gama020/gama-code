@@ -1,153 +1,142 @@
-# T3 Code
+# Gama Os
 
-T3 Code is an "agent harness control surface". It enables control of the agents on your machine with a best-in-class mobile app ([iOS](https://apps.apple.com/us/app/t3-code-remote-claude-more/id6787819824), [Android](https://play.google.com/store/apps/details?id=com.t3tools.t3code)), [web app](https://app.t3.codes) and [Electron-based desktop app](https://t3.codes).
+<p align="center">
+  <img src="assets/prod/black-macos-1024.png" width="128" height="128" alt="Gama Os Logo" style="border-radius: 24px;" />
+</p>
 
-Works with your subscriptions on Claude Code, Codex, Cursor, Grok Build, OpenCode, Google Antigravity, and fx. If they're set up on your computer, T3 Code can control them.
+<p align="center">
+  <strong>A Superfície de Controle Inteligente para Agentes de Código no seu Computador</strong><br />
+  <em>macOS • Windows • Linux • Web</em>
+</p>
 
-## "Wait, what are you selling me?"
+---
 
-Nothing. We built T3 Code because we wanted the best possible development experience with agents. We were inspired by existing solutions like the Codex desktop app, Conductor, Claude Desktop and Cursor Glass, but none met our bar.
+## 🚀 Sobre o Gama Os
 
-We wanted something performant, remote-ready, and truly open. If we ever go the wrong direction, we want you to have everything you need to fork and build the editor that you want.
+O **Gama Os** é uma plataforma open-source moderna para orquestração e controle de agentes de inteligência artificial de desenvolvimento direto na sua máquina (Claude Code, OpenAI Codex, Cursor, Google Antigravity, OpenCode, Grok Build e fx).
 
-## Installation
+Este projeto é um fork evoluído do [T3 Code](https://github.com/pingdotgg/t3code), customizado com:
 
-> [!WARNING]
-> T3 Code currently supports Codex, Claude, Cursor, Grok Build, OpenCode, Antigravity, and fx. Install and authenticate at least one provider before use:
->
-> - Codex: install [Codex CLI](https://developers.openai.com/codex/cli) and run `codex login`
-> - Claude: install [Claude Code](https://claude.com/product/claude-code) and run `claude auth login`
-> - Cursor: install [Cursor CLI](https://cursor.com/cli) and run `agent login`
-> - Grok Build: install [Grok Build CLI](https://x.ai/cli) and run `grok login`
-> - OpenCode: install [OpenCode](https://opencode.ai) and run `opencode auth login`
-> - Antigravity: enable it in Settings, then use **Install Antigravity** and **Sign in with Google**. No CLI is required.
-> - fx: install [fx](https://fx.sh) and run `fx login` on the machine running the T3 Code server ([setup guide](./docs/user/providers-fx.md))
+- **Identidade Visual Gama Os**: Monograma exclusivo em alta resolução, novos ícones e temas nativos.
+- **100% em Português do Brasil (PT-BR)**: Sistema completo de internacionalização com suporte a múltiplos idiomas.
+- **Nova Barra Lateral (Sidebar)**: Inspirada no Antigravity e Codex, com agrupamento inteligente por repositórios, branches git, contadores de threads e monitoramento em tempo real de estados do agente (🔵 executando, 🟢 pronto, 🟡 aprovação necessária, 🔴 erro).
+- **Compilação Multiplataforma**: Instaladores nativos para **macOS (.dmg)**, **Windows (.exe NSIS)** e **Linux (.AppImage / .deb)**.
+- **Sincronização Upstream Contínua**: Mecanismo de isolamento que permite puxar e incorporar as novidades do repositório oficial com um único comando.
 
-### Command line
+---
 
-```bash
-curl -fsSL https://t3.codes/install.sh | sh
-```
+## 📥 Instalação dos Binários Pré-compilados
 
-On Windows, in PowerShell:
+### macOS (Apple Silicon & Intel)
 
-```powershell
-irm https://t3.codes/install.ps1 | iex
-```
+Baixe o arquivo `.dmg` mais recente em [Releases](https://github.com/gama020/gama-code/releases):
 
-Then run `t3` to start the server and open the local web app. `t3 service install` keeps it running in the background, `t3 update` moves to a newer release, and `t3 --help` has the full reference.
+- **Apple Silicon (M1/M2/M3/M4)**: `Gama-Os-<versao>-arm64.dmg`
+- **Intel (x64)**: `Gama-Os-<versao>-x64.dmg`
 
-To try it once without installing, run `npx t3@latest` instead.
+Basta abrir o `.dmg` e arrastar o **Gama Os** para a pasta `/Applications`.
 
-### Desktop app
+### Windows
 
-Install the latest version of the desktop app from [GitHub Releases](https://github.com/pingdotgg/t3code/releases), or from your favorite package registry:
+Baixe o instalador `Gama-Os-<versao>-x64.exe` em [Releases](https://github.com/gama020/gama-code/releases) e execute a instalação com assistente NSIS.
 
-#### Windows (`winget`)
+### Linux (Ubuntu, Debian, Fedora, Arch)
 
-```bash
-winget install T3Tools.T3Code
-```
+Baixe o pacote desejado em [Releases](https://github.com/gama020/gama-code/releases):
 
-#### Windows (`scoop`)
+- **AppImage**: Torne executável com `chmod +x Gama-Os-*.AppImage` e execute diretamente.
+- **Debian / Ubuntu**: Instale com `sudo apt install ./Gama-Os-*.deb`.
 
-```bash
-scoop install extras/t3code
-```
+---
 
-#### macOS (Homebrew)
+## 🛠️ Comandos da CLI (`gama`, `gamaos`, `t3`)
+
+O Gama Os inclui uma CLI avançada no terminal:
 
 ```bash
-brew install --cask t3-code
+# Iniciar o servidor local e abrir a interface web
+gama
+
+# Iniciar em segundo plano como serviço
+gama service install
+
+# Parear com outro dispositivo (mobile ou outro computador)
+gama pair
+
+# Executar diagnóstico de dependências e agentes instalados
+gama doctor
 ```
 
-#### Debian, Ubuntu (`.deb`)
+---
 
-Download the `.deb` from [GitHub Releases](https://github.com/pingdotgg/t3code/releases), then:
+## 💻 Desenvolvimento & Compilação Local
+
+### Pré-requisitos
+
+- **Node.js** >= 22 (recomendado Node 22+)
+- **pnpm** >= 12
+- **Rust / Cargo** (para os módulos nativos de monitoramento de recursos)
+- **ImageMagick** (opcional, para regerar ativos de marca)
+
+### Instalação de Dependências
 
 ```bash
-sudo apt install ./T3-Code-*.deb
+pnpm install
 ```
 
-#### Arch Linux (AUR)
-
-Stable:
+### Executar em Modo de Desenvolvimento
 
 ```bash
-yay -S t3code-bin
+# Iniciar o servidor e o cliente web com hot reload
+pnpm run dev
 ```
 
-Nightly:
+### Compilar os Instaladores Desktop Localmente
 
 ```bash
-yay -S t3code-nightly-bin
+# Compilar os bundles do web, servidor e desktop
+./node_modules/.bin/vp run --filter @t3tools/desktop build
+
+# 1. Gerar o DMG para macOS (Apple Silicon arm64)
+pnpm run dist:desktop:dmg:arm64
+
+# 2. Gerar o DMG para macOS (Intel x64)
+pnpm run dist:desktop:dmg:x64
+
+# 3. Gerar o instalador NSIS (.exe) para Windows
+pnpm run dist:desktop:win:x64
+
+# 4. Gerar AppImage e pacote .deb para Linux
+pnpm run dist:desktop:linux
 ```
 
-The AUR packaging is maintained in this repository under [`packaging/aur`](./packaging/aur).
+Os arquivos gerados são salvos automaticamente na pasta `release/`.
 
-#### Nix (nixpkgs)
+---
+
+## 🔄 Sincronização com o Repositório Original (Upstream)
+
+Para puxar novas atualizações lançadas pelo repositório oficial (`pingdotgg/t3code`) sem perder nenhuma customização:
 
 ```bash
-nix profile add github:NixOS/nixpkgs/nixos-unstable#t3code
+./scripts/sync-upstream.sh
 ```
 
-The package is maintained in [nixpkgs](https://github.com/NixOS/nixpkgs/tree/nixos-unstable/pkgs/by-name/t3/t3code)
-and includes the desktop app (`t3code-desktop`) and the `t3` command.
-See [Nix installation](./docs/user/install.md#nix-nixpkgs) for NixOS configuration and updates.
+Esse script busca os commits mais recentes do upstream, atualiza a branch `upstream-main` e faz o merge limpo na branch de produção do Gama Os.
 
-## Some notes
+---
 
-We are very very early in this project. Expect bugs.
+## 🌐 Internacionalização & Idiomas
 
-We are (mostly) not accepting contributions yet. Small fixes may be considered. Big features will not be.
+As traduções do Gama Os ficam centralizadas em:
 
-## Documentation
+- `apps/web/src/i18n/locales/pt-BR.json` (Português - Brasil)
+- `apps/web/src/i18n/locales/en-US.json` (Inglês)
 
-Full docs live in [docs/](./docs). There's no docs site yet.
+O idioma padrão é **Português do Brasil**, com alternância fácil pelo menu de Configurações da aplicação.
 
-- [FAQ](./docs/user/faq.md)
-- [Install and first run](./docs/user/install.md)
-- [Permission modes](./docs/user/permission-modes.md)
-- [Keyboard shortcuts](./docs/user/keybindings.md)
-- [Project settings](./docs/user/project-settings.md)
-- [Appearance preferences](./docs/user/appearance.md)
-- [Remote access from a phone or another machine](./docs/user/remote-access.md)
-- [Connect Claude Code, Codex, ChatGPT and other agents over MCP](./docs/user/outside-agents.md)
-- [Keeping app and server in sync](./docs/user/updating.md)
-- [Source control integrations](./docs/user/source-control.md)
-- Multiple accounts: [Codex](./docs/user/providers-codex.md) · [Claude](./docs/user/providers-claude.md)
-- [Run T3 Code as a background service](./docs/user/background-service.md)
+---
 
-Building from source? Start at [docs/internals/overview.md](./docs/internals/overview.md).
+## 📄 Licença
 
-## If you REALLY want to contribute still.... read this first
-
-### Install `vp`
-
-T3 Code uses Vite+ so you'll need to install the global `vp` command-line tool.
-
-#### macOS / Linux
-
-```bash
-curl -fsSL https://vite.plus | bash
-```
-
-#### Windows
-
-```bash
-irm https://vite.plus/ps1 | iex
-```
-
-Checkout their getting started guide for more information: https://viteplus.dev/guide/
-
-### Install dependencies
-
-```bash
-vp i
-```
-
-Read [CONTRIBUTING.md](./CONTRIBUTING.md) before reporting a bug or opening a PR.
-
-Have a feature request? Start an [Ideas discussion](https://github.com/pingdotgg/t3code/discussions/categories/ideas).
-
-Need support? Join the [Discord](https://discord.gg/jn4EGJjrvv).
+Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](./LICENSE) para obter mais detalhes.

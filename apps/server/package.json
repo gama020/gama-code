@@ -8,6 +8,8 @@
     "directory": "apps/server"
   },
   "bin": {
+    "gama": "./dist/bin.mjs",
+    "gamaos": "./dist/bin.mjs",
     "t3": "./dist/bin.mjs"
   },
   "files": [

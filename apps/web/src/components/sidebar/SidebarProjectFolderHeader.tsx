@@ -10,19 +10,20 @@ import { resolveSidebarFolderDot, resolveThreadLastVisitedAt } from "../Sidebar.
 import { ProjectFavicon } from "../ProjectFavicon";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
+import { useTranslation } from "../../i18n";
 
 const FOLDER_DOT_CLASS_NAME = {
-  attention: "bg-warning",
+  attention: "bg-warning ring-2 ring-warning/30",
   failed: "bg-error",
   unread: "bg-success",
-  working: "bg-info",
+  working: "bg-info animate-pulse ring-2 ring-info/30",
 } as const;
 
 const FOLDER_DOT_LABEL = {
-  attention: ", needs you",
-  failed: ", failed",
-  unread: ", done",
-  working: ", working",
+  attention: ", precisa de atenção",
+  failed: ", falhou",
+  unread: ", concluído",
+  working: ", trabalhando",
 } as const;
 
 /** The folder's sidebar tree row; its thread rows name it as their parent. */
@@ -59,6 +60,13 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
         })),
       )
     : null;
+  const { t } = useTranslation();
+  const newThreadInFolderText = t(
+    "sidebar.newThreadInProjectNamed",
+    `Nova conversa em ${group.displayName}`,
+    { name: group.displayName },
+  );
+
   return (
     <li
       data-testid="sidebar-project-folder"
@@ -82,7 +90,7 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
           {group.displayName}
         </span>
         {dot ? (
-          <span className={cn("size-1.5 shrink-0 rounded-full", FOLDER_DOT_CLASS_NAME[dot])}>
+          <span className={cn("size-2 shrink-0 rounded-full", FOLDER_DOT_CLASS_NAME[dot])}>
             <span className="sr-only">{FOLDER_DOT_LABEL[dot]}</span>
           </span>
         ) : null}
@@ -108,14 +116,14 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
                 data-sidebar-action-for={rowId}
                 size="icon-xs"
                 variant="ghost-muted"
-                aria-label={`New thread in ${group.displayName}`}
+                aria-label={newThreadInFolderText}
                 onClick={() => props.onNewThread(group)}
               />
             }
           >
             <SquarePenIcon aria-hidden />
           </TooltipTrigger>
-          <TooltipPopup>New thread in {group.displayName}</TooltipPopup>
+          <TooltipPopup>{newThreadInFolderText}</TooltipPopup>
         </Tooltip>
       </span>
     </li>
