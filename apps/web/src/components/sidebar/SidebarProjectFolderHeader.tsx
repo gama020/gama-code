@@ -98,6 +98,16 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
         <span className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/80 group-hover/project-folder:text-sidebar-foreground">
           {group.displayName}
         </span>
+        {group.environmentPresence === "local-only" ? (
+          <span className="shrink-0 text-3xs text-muted-foreground/60 font-medium group-hover/project-folder:opacity-0 pointer-coarse:opacity-0 transition-opacity">
+            Local
+          </span>
+        ) : group.remoteEnvironmentLabels.length > 0 ? (
+          <span className="shrink-0 inline-flex items-center gap-1 text-3xs text-muted-foreground/75 font-medium group-hover/project-folder:opacity-0 pointer-coarse:opacity-0 transition-opacity">
+            <span>{group.remoteEnvironmentLabels[0]}</span>
+            <span className="size-1.5 rounded-full bg-success" />
+          </span>
+        ) : null}
         {dot ? (
           <span className={cn("size-2 shrink-0 rounded-full", FOLDER_DOT_CLASS_NAME[dot])}>
             <span className="sr-only">{FOLDER_DOT_LABEL[dot]}</span>

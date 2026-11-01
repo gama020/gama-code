@@ -84,7 +84,6 @@ const KNOWN_NON_WEB_SCHEMES: ReadonlySet<string> = new Set([
   "blob:",
   "chrome:",
   "data:",
-  "file:",
   "ftp:",
   "javascript:",
   "mailto:",
@@ -145,11 +144,48 @@ export function resolveSearchUrlTemplate(settings: {
   return isValidSearchUrlTemplate(custom) ? custom : BROWSER_SEARCH_URL_TEMPLATES.duckduckgo;
 }
 
+function tryNormalizeLocalFileUrl(trimmed: string): string | null {
+  if (trimmed.startsWith("file://")) {
+    try {
+      return new URL(trimmed).href;
+    } catch {
+      return null;
+    }
+  }
+  if (
+    trimmed.startsWith("/") &&
+    (trimmed.endsWith(".html") ||
+      trimmed.endsWith(".htm") ||
+      trimmed.includes(".") ||
+      trimmed.startsWith("/Volumes/") ||
+      trimmed.startsWith("/Users/") ||
+      trimmed.startsWith("/home/"))
+  ) {
+    try {
+      return new URL(`file://${trimmed}`).href;
+    } catch {
+      return null;
+    }
+  }
+  if (/^[a-zA-Z]:[/\\]/.test(trimmed)) {
+    try {
+      return new URL(`file:///${trimmed.replace(/\\/g, "/")}`).href;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 export function resolveAddressBarInput(
   rawInput: string,
   searchUrlTemplate: string = BROWSER_SEARCH_URL_TEMPLATES.duckduckgo,
 ): string {
   const trimmed = rawInput.trim();
+  const localFileUrl = tryNormalizeLocalFileUrl(trimmed);
+  if (localFileUrl !== null) {
+    return localFileUrl;
+  }
   if (URL_SCHEME_WITH_AUTHORITY_PATTERN.test(trimmed) || trimmed.length === 0)
     return normalizePreviewUrl(trimmed);
   if (!/\s/.test(trimmed)) {
@@ -159,7 +195,7 @@ export function resolveAddressBarInput(
       protocol !== undefined &&
       (KNOWN_NON_WEB_SCHEMES.has(protocol) || !BARE_HOST_PORT_PATTERN.test(trimmed))
     ) {
-      if (protocol !== "http:" && protocol !== "https:") {
+      if (protocol !== "http:" && protocol !== "https:" && protocol !== "file:") {
         throw new PreviewUrlNormalizationError({
           inputLength: rawInput.length,
           reason: "unsupported-protocol",
@@ -185,6 +221,10 @@ export function normalizePreviewUrl(rawUrl: string): string {
   if (trimmed.length === 0) {
     throw new PreviewUrlNormalizationError({ inputLength: rawUrl.length, reason: "empty" });
   }
+  const localFileUrl = tryNormalizeLocalFileUrl(trimmed);
+  if (localFileUrl !== null) {
+    return localFileUrl;
+  }
   const useHttp = LOOPBACK_PREFIX_PATTERN.test(trimmed);
   const candidate = URL_SCHEME_WITH_AUTHORITY_PATTERN.test(trimmed)
     ? trimmed
@@ -200,7 +240,7 @@ export function normalizePreviewUrl(rawUrl: string): string {
       cause,
     });
   }
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:" && parsed.protocol !== "file:") {
     throw new PreviewUrlNormalizationError({
       inputLength: rawUrl.length,
       reason: "unsupported-protocol",

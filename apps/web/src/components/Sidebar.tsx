@@ -68,6 +68,7 @@ import {
   ListFilterIcon,
   PlusIcon,
   SettingsIcon,
+  SquarePenIcon,
 } from "lucide-react";
 import {
   useEffect,
@@ -3326,9 +3327,11 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                           ? folderRowsMultiline
                             ? "folder-multiline"
                             : "folder"
-                          : isCard
-                            ? "card"
-                            : "slim";
+                          : boringSidebarEnabled
+                            ? "folder-multiline"
+                            : isCard
+                              ? "card"
+                              : "slim";
                         return (
                           <SortableThreadRow
                             key={threadKey}
@@ -3433,6 +3436,31 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                       };
                       const from = isContextDrag ? null : (dragState?.activeSection ?? null);
                       const items: ReactNode[] = [
+                        <li key="action-new-thread" className="list-none px-2 pt-1 pb-1.5">
+                          <button
+                            type="button"
+                            onClick={handleNewThreadClick}
+                            className="group flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg bg-sidebar-row-hover/60 hover:bg-sidebar-row-hover px-3 py-2 text-xs font-medium text-foreground ring-1 ring-border/40 hover:ring-border transition-all active:scale-[0.99]"
+                          >
+                            <div className="flex items-center gap-2">
+                              <SquarePenIcon className="size-3.5 text-primary shrink-0" />
+                              <span className="font-medium">
+                                {t("chat.newThread", "Novo chat")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-3xs text-muted-foreground">
+                              {scopedProjectGroups[0]?.displayName ? (
+                                <span className="max-w-[100px] truncate">
+                                  {scopedProjectGroups[0].displayName}
+                                </span>
+                              ) : newThreadShortcutLabel ? (
+                                <kbd className="font-mono text-3xs opacity-80">
+                                  {newThreadShortcutLabel}
+                                </kbd>
+                              ) : null}
+                            </div>
+                          </button>
+                        </li>,
                         <SidebarDraftBlock
                           key="draft-sessions"
                           projectByKey={projectByKey}
@@ -3451,6 +3479,19 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                           continue;
                         }
                         if (projectFolders !== null && item.marker === "active-placeholder") {
+                          if (projectFolders.length > 0) {
+                            items.push(
+                              <li
+                                key="projects-section-header"
+                                className="list-none flex items-center justify-between px-3 pt-3 pb-1 text-3xs font-semibold tracking-wider text-muted-foreground uppercase select-none"
+                              >
+                                <span>{t("sidebar.projects", "Projetos")}</span>
+                                <span className="text-3xs font-medium text-muted-foreground/60">
+                                  {projectFolders.length}
+                                </span>
+                              </li>,
+                            );
+                          }
                           for (const folder of projectFolders) {
                             items.push(
                               <SidebarProjectFolderHeader
@@ -3480,11 +3521,24 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                         }
                         switch (item.marker) {
                           case "pinned-header":
+                            if (pinnedThreads.length > 0) {
+                              items.push(
+                                <li
+                                  key="pinned-section-header"
+                                  className="list-none flex items-center justify-between px-3 pt-2 pb-1 text-3xs font-semibold tracking-wider text-muted-foreground uppercase select-none"
+                                >
+                                  <span>{t("sidebar.pinned", "Fixados")}</span>
+                                  <span className="text-3xs font-medium text-muted-foreground/60">
+                                    {pinnedThreads.length}
+                                  </span>
+                                </li>,
+                              );
+                            }
                             items.push(
                               <SidebarDragBoundary
                                 key="pinned-header"
                                 marker="pinned-header"
-                                label={t("sidebar.pinned", "Pinned")}
+                                label={t("sidebar.pinned", "Fixados")}
                                 visible={from !== null}
                                 isDropTarget={dragTargetSection === "pinned"}
                               />,

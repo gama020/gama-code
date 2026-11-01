@@ -516,6 +516,7 @@ export const make = Effect.gen(function* () {
       webPreferences.nodeIntegrationInSubFrames = false;
       webPreferences.contextIsolation = false;
       webPreferences.disableHtmlFullscreenWindowResize = true;
+      webPreferences.allowFileAccessFromFileURLs = true;
       if (previewPasskeys.bridgeEnabled) {
         webPreferences.additionalArguments = [
           ...(webPreferences.additionalArguments ?? []),

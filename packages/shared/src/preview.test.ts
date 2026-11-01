@@ -171,4 +171,35 @@ describe("normalizePreviewUrl", () => {
       );
     }
   });
+
+  it("normalizes file:// URLs and local filesystem paths", () => {
+    expect(
+      normalizePreviewUrl(
+        "file:///Volumes/SSD/@Arquivos/Gama%20Creative/Creative%20OS/08-Portfolio/Cooperlider/index.html",
+      ),
+    ).toBe(
+      "file:///Volumes/SSD/@Arquivos/Gama%20Creative/Creative%20OS/08-Portfolio/Cooperlider/index.html",
+    );
+    expect(
+      normalizePreviewUrl(
+        "/Volumes/SSD/@Arquivos/Gama Creative/Creative OS/08-Portfolio/Cooperlider/index.html",
+      ),
+    ).toBe(
+      "file:///Volumes/SSD/@Arquivos/Gama%20Creative/Creative%20OS/08-Portfolio/Cooperlider/index.html",
+    );
+    expect(
+      resolveAddressBarInput(
+        "file:///Volumes/SSD/@Arquivos/Gama%20Creative/Creative%20OS/08-Portfolio/Cooperlider/index.html",
+      ),
+    ).toBe(
+      "file:///Volumes/SSD/@Arquivos/Gama%20Creative/Creative%20OS/08-Portfolio/Cooperlider/index.html",
+    );
+    expect(
+      resolveAddressBarInput(
+        "/Volumes/SSD/@Arquivos/Gama Creative/Creative OS/08-Portfolio/Cooperlider/index.html",
+      ),
+    ).toBe(
+      "file:///Volumes/SSD/@Arquivos/Gama%20Creative/Creative%20OS/08-Portfolio/Cooperlider/index.html",
+    );
+  });
 });

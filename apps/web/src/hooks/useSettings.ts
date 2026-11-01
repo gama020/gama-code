@@ -421,9 +421,9 @@ export function useEnvironmentIdentificationMode(): EnvironmentIdentificationMod
   });
 }
 
-/** In Gama Os, the project-grouped sidebar is the standard, modern experience. */
+/** In Gama Os, the project-grouped sidebar (Codex/Antigravity style) is the native, standard experience. */
 export function useBoringSidebarEnabled(): boolean {
-  return useClientSettings((settings) => settings.boringSidebarEnabled ?? true);
+  return useClientSettings((settings) => settings.boringSidebarEnabled || true);
 }
 
 export async function prepareModelPreferencesPatch(
