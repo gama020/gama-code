@@ -70,7 +70,10 @@
   "settings": {
     "title": "Settings",
     "appearance": "Appearance",
-    "language": "Language",
+    "interface": "Interface",
+    "language": "Language / Idioma",
+    "languageDescription": "Select the interface language for Gama Os.",
+    "selectLanguage": "Select language",
     "portuguese": "Português (Brasil)",
     "english": "English (US)",
     "providers": "AI Providers",
@@ -82,6 +85,16 @@
     "storage": "Storage & Data",
     "updates": "Updates",
     "version": "Gama Os Version"
+  },
+  "draft": {
+    "whatShouldWeBuild": "What should we build",
+    "whatShouldWeBuildIn": "What should we build in",
+    "inProject": " in ",
+    "whatShouldWeWorkOn": "What should we work on?",
+    "orStartWithoutProject": "or start without a project",
+    "chooseProject": "Choose a project",
+    "toStart": "to start",
+    "addProjectToStart": "Add a project to start"
   },
   "common": {
     "save": "Save",

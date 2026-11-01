@@ -6,23 +6,23 @@ export const runtimeModeConfig: Record<
   { label: string; description: string; icon: LucideIcon }
 > = {
   "approval-required": {
-    label: "Supervised",
-    description: "Ask before commands and file changes.",
+    label: "Supervisionado",
+    description: "Perguntar antes de comandos e alterações de arquivos.",
     icon: LockIcon,
   },
   "auto-accept-edits": {
-    label: "Auto-accept edits",
-    description: "Auto-approve edits, ask before other actions.",
+    label: "Aceitar edições",
+    description: "Aprovar edições automaticamente, perguntar antes de outras ações.",
     icon: PenLineIcon,
   },
   auto: {
-    label: "Auto",
-    description: "Supported providers approve routine actions; others still ask.",
+    label: "Automático",
+    description: "Provedores compatíveis aprovam ações rotineiras; outros ainda perguntam.",
     icon: SparklesIcon,
   },
   "full-access": {
-    label: "Full access",
-    description: "Allow commands and edits without prompts.",
+    label: "Acesso total",
+    description: "Permitir comandos e edições sem confirmações.",
     // An open lock reads like a closed one at small sizes; a crossed shield does not.
     icon: ShieldOffIcon,
   },

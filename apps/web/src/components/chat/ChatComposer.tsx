@@ -3371,18 +3371,18 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                     placeholder={
                       isComposerApprovalState
                         ? activePendingApproval?.supportsFeedback
-                          ? "Send feedback to decline this request"
-                          : "Send a message to decline and redirect the agent"
+                          ? "Envie feedback para recusar esta solicitação"
+                          : "Envie uma mensagem para recusar e redirecionar o agente"
                         : activePendingProgress
                           ? isChoiceOnlyPendingQuestion
-                            ? "Choose an option above"
-                            : "Type your own answer, or leave this blank to use the selected option"
+                            ? "Escolha uma opção acima"
+                            : "Digite sua resposta ou deixe em branco para usar a opção selecionada"
                           : showPlanFollowUpPrompt && activeProposedPlan
-                            ? "Add feedback to refine the plan, or leave this blank to implement it"
+                            ? "Adicione feedback para ajustar o plano ou deixe em branco para implementar"
                             : projectSelectionRequired
-                              ? "Choose a project above to start a thread"
+                              ? "Escolha um projeto acima para iniciar uma conversa"
                               : showProviderUnavailable
-                                ? "Enable a provider in Settings to send a message"
+                                ? "Ative um provedor nas Configurações para enviar uma mensagem"
                                 : DEFAULT_COMPOSER_PLACEHOLDER
                     }
                     disabled={

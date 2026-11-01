@@ -70,7 +70,10 @@
   "settings": {
     "title": "Configurações",
     "appearance": "Aparência",
-    "language": "Idioma",
+    "interface": "Interface",
+    "language": "Idioma / Language",
+    "languageDescription": "Selecione o idioma da interface do Gama Os.",
+    "selectLanguage": "Selecione o idioma",
     "portuguese": "Português (Brasil)",
     "english": "English (US)",
     "providers": "Provedores de IA",
@@ -82,6 +85,16 @@
     "storage": "Armazenamento & Dados",
     "updates": "Atualizações",
     "version": "Versão do Gama Os"
+  },
+  "draft": {
+    "whatShouldWeBuild": "O que vamos construir",
+    "whatShouldWeBuildIn": "O que vamos construir no",
+    "inProject": " no ",
+    "whatShouldWeWorkOn": "No que vamos trabalhar?",
+    "orStartWithoutProject": "ou comece sem um projeto",
+    "chooseProject": "Escolha um projeto",
+    "toStart": "para começar",
+    "addProjectToStart": "Adicione um projeto para começar"
   },
   "common": {
     "save": "Salvar",

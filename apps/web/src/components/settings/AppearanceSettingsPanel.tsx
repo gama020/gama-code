@@ -21,6 +21,7 @@ import {
 import { useCustomThemes } from "../../hooks/useCustomThemes";
 import { useEnvironmentIdentificationMode } from "../../hooks/useSettings";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../i18n";
 import { useScopedSettings, useUpdateScopedSettings } from "./useScopedSettings";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
@@ -85,6 +86,7 @@ const EFFORT_DISPLAY_LABELS: Record<EffortDisplay, string> = {
 };
 
 export function AppearanceSettingsPanel() {
+  const { locale, setLocale, t } = useTranslation();
   const {
     appearanceMode,
     refreshTheme,
@@ -162,7 +164,35 @@ export function AppearanceSettingsPanel() {
         </div>
       </SettingsSection>
 
-      <SettingsSection id="appearance-interface" title="Interface">
+      <SettingsSection id="appearance-interface" title={t("settings.interface", "Interface")}>
+        <SettingsRow
+          title={t("settings.language", "Idioma / Language")}
+          description={t(
+            "settings.languageDescription",
+            "Selecione o idioma da interface do Gama Os.",
+          )}
+          control={
+            <Select
+              value={locale}
+              onValueChange={(val) => {
+                if (val === "pt-BR" || val === "en-US") {
+                  setLocale(val);
+                }
+              }}
+            >
+              <SelectTrigger
+                aria-label={t("settings.language", "Idioma")}
+                className="w-full sm:w-52"
+              >
+                <SelectValue placeholder={t("settings.selectLanguage", "Selecione o idioma")} />
+              </SelectTrigger>
+              <SelectPopup>
+                <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
+                <SelectItem value="en-US">English (US)</SelectItem>
+              </SelectPopup>
+            </Select>
+          }
+        />
         <SettingsRow
           {...searchableSetting("setting-appearance-contrast")}
           description="Adjust the contrast of colors and borders across the interface."

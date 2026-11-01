@@ -55,6 +55,7 @@ import { TriageDraftHero } from "./TriageDraftHero";
 import { resolveProjectSettings } from "@t3tools/shared/projectSettings";
 import { resolveProjectDefaultProviderModelSelection } from "../../providerInstances";
 import { resolveNewThreadModelSelection } from "@t3tools/shared/usageLimits";
+import { useTranslation } from "~/i18n";
 
 const ADD_PROJECT_VALUE = "add-project";
 
@@ -74,6 +75,7 @@ export function DraftHeroHeadline({
   activeProjectRef,
   activeProjectTitle,
 }: DraftHeroHeadlineProps) {
+  const { t } = useTranslation();
   const projects = useProjects();
   const threads = useThreadShells();
   const { environments } = useEnvironments();
@@ -313,7 +315,7 @@ export function DraftHeroHeadline({
       <ComboboxPopup align="center" className="w-72 overflow-hidden">
         <ComboboxSearchInput
           aria-label="Search projects"
-          placeholder="Search projects..."
+          placeholder={t("sidebar.searchProjects", "Buscar projetos...")}
           value={pickerQuery}
           onChange={(event) => setPickerQuery(event.target.value)}
           onKeyDown={(event) => {
@@ -394,7 +396,7 @@ export function DraftHeroHeadline({
             />
           }
         >
-          or start without a project
+          {t("draft.orStartWithoutProject", "ou comece sem um projeto")}
         </TooltipTrigger>
         {noProjectShortcut ? <TooltipPopup side="bottom">{noProjectShortcut}</TooltipPopup> : null}
       </Tooltip>
@@ -415,17 +417,21 @@ export function DraftHeroHeadline({
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col items-center">
       {hasResolvedProject && !isScratchDraft ? (
-        <DraftHeroProjectHeading projectName={activeProjectDisplayName ?? "Choose a project"}>
+        <DraftHeroProjectHeading
+          projectName={activeProjectDisplayName ?? t("draft.chooseProject", "Escolha um projeto")}
+        >
           {projectSelector}
         </DraftHeroProjectHeading>
       ) : (
         <h1 className="w-full text-center font-normal text-2xl text-foreground tracking-tight sm:text-3xl">
           {isScratchDraft ? (
-            <>What should we work on?</>
+            <>{t("draft.whatShouldWeWorkOn", "No que vamos trabalhar?")}</>
           ) : canChooseProject ? (
-            <>{projectSelector} to start</>
+            <>
+              {projectSelector} {t("draft.toStart", "para começar")}
+            </>
           ) : (
-            <>Add a project to start</>
+            <>{t("draft.addProjectToStart", "Adicione um projeto para começar")}</>
           )}
         </h1>
       )}

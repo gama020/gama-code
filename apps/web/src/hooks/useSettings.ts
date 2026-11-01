@@ -150,7 +150,13 @@ async function hydrateClientSettings(): Promise<void> {
         return;
       }
       if (persistedSettings) {
-        replaceClientSettingsSnapshot({ ...DEFAULT_CLIENT_SETTINGS, ...persistedSettings });
+        const mergedSettings = { ...DEFAULT_CLIENT_SETTINGS, ...persistedSettings };
+        if (typeof window !== "undefined" && !localStorage.getItem("gama:sidebar_migrated_v1")) {
+          mergedSettings.boringSidebarEnabled = true;
+          mergedSettings.boringSidebarMultilineRows = true;
+          localStorage.setItem("gama:sidebar_migrated_v1", "true");
+        }
+        replaceClientSettingsSnapshot(mergedSettings);
       }
       setClientSettingsHydrationStatus("ready");
     } catch (error) {
@@ -415,11 +421,9 @@ export function useEnvironmentIdentificationMode(): EnvironmentIdentificationMod
   });
 }
 
-/** Legacy sidebar opt-ins still count, so those users land in the boring sidebar. */
+/** In Gama Os, the project-grouped sidebar is the standard, modern experience. */
 export function useBoringSidebarEnabled(): boolean {
-  return useClientSettings(
-    (settings) => settings.boringSidebarEnabled || settings.legacySidebarEnabled,
-  );
+  return useClientSettings((settings) => settings.boringSidebarEnabled ?? true);
 }
 
 export async function prepareModelPreferencesPatch(

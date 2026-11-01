@@ -89,17 +89,17 @@ export function resolveContextStripLabelsCompact(input: {
 }
 
 export function resolveEnvModeLabel(mode: EnvMode): string {
-  return mode === "worktree" ? "New worktree" : "Current checkout";
+  return mode === "worktree" ? "Nova worktree" : "Checkout atual";
 }
 
 export const WORKTREE_SUBMODULES_LABELS: Record<WorktreeSubmodules, string> = {
-  recursive: "Recursive",
-  "top-level": "Top level only",
-  none: "Skip",
+  recursive: "Recursivo",
+  "top-level": "Apenas nível superior",
+  none: "Ignorar",
 };
 
 export function resolveCurrentWorkspaceLabel(activeWorktreePath: string | null): string {
-  return activeWorktreePath ? "Current worktree" : resolveEnvModeLabel("local");
+  return activeWorktreePath ? "Worktree atual" : resolveEnvModeLabel("local");
 }
 
 export function resolveLockedWorkspaceLabel(
@@ -107,7 +107,7 @@ export function resolveLockedWorkspaceLabel(
   effectiveEnvMode: EnvMode,
 ): string {
   if (activeWorktreePath) return "Worktree";
-  return effectiveEnvMode === "worktree" ? resolveEnvModeLabel("worktree") : "Local checkout";
+  return effectiveEnvMode === "worktree" ? resolveEnvModeLabel("worktree") : "Checkout local";
 }
 
 export interface PreviousWorktreeSeed {
