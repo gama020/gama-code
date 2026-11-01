@@ -3,14 +3,12 @@ import {
   getProjectFaviconResourceKey,
   isProjectFaviconFallbackUrl,
 } from "@t3tools/shared/projectFavicon";
-import { FolderCodeIcon } from "lucide-react";
+import { FolderCodeIcon, FolderIcon } from "lucide-react";
 import type { ComponentType } from "react";
 import { createElement, lazy, Suspense, useState } from "react";
 import { useAtomValue } from "@effect/atom-react";
 import { projectFaviconUrlAtom } from "../state/assets";
-import { deriveProjectIdentity } from "../projectIdentity";
 import { projectIconColorClassName } from "../projectIconColors";
-import { ProjectMonogram } from "./ProjectMonogram";
 import { cn } from "~/lib/utils";
 
 // All lucide icons load as one chunk, only once a project uses a lucide override.
@@ -40,11 +38,7 @@ export function ProjectFavicon(input: {
   const { project } = input;
   if (project.projectIcon?.kind === "monogram") {
     return (
-      <ProjectMonogram
-        text={project.projectIcon.text}
-        color={project.projectIcon.color}
-        className={input.className}
-      />
+      <FolderIcon className={cn("size-3.5 shrink-0 text-muted-foreground", input.className)} />
     );
   }
   if (project.projectIcon?.kind === "emoji") {
@@ -117,22 +111,15 @@ function AutomaticProjectFavicon(input: Parameters<typeof ProjectFavicon>[0]) {
 
 function ProjectFaviconFallback({
   className,
-  icon: Icon,
+  icon: _Icon,
   emoji,
-  projectName,
+  projectName: _projectName,
 }: {
   readonly className?: string | undefined;
   readonly icon: ComponentType<{ className?: string }>;
   readonly emoji?: string | undefined;
   readonly projectName?: string | undefined;
 }) {
-  if (projectName && projectName.trim().length > 0) {
-    const identity = deriveProjectIdentity(projectName);
-    return (
-      <ProjectMonogram text={identity.monogram} color={identity.color} className={className} />
-    );
-  }
-
   if (emoji) {
     return (
       <span
@@ -147,7 +134,7 @@ function ProjectFaviconFallback({
     );
   }
 
-  return <Icon className={cn("size-3.5 shrink-0 text-icon-muted", className)} />;
+  return <FolderIcon className={cn("size-3.5 shrink-0 text-muted-foreground", className)} />;
 }
 
 function ProjectFaviconImage({

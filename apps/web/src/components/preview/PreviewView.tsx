@@ -394,7 +394,7 @@ export function PreviewView({
     if (mode === "laptop") {
       void commitBrowserViewportChange(target, {
         _tag: "preset",
-        presetId: "desktop-hd",
+        presetId: "laptop-1280x800",
         width: 1280,
         height: 800,
       }).catch(() => undefined);
