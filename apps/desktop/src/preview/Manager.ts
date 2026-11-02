@@ -429,7 +429,6 @@ const IN_PLACE_DENIED_PROTOCOLS = new Set([
   "chrome:",
   "data:",
   "devtools:",
-  "file:",
   "filesystem:",
   "javascript:",
   "view-source:",

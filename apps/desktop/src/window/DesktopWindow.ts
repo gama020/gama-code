@@ -511,12 +511,13 @@ export const make = Effect.gen(function* () {
         event.preventDefault();
         return;
       }
-      webPreferences.sandbox = true;
+      webPreferences.sandbox = false;
       webPreferences.nodeIntegration = false;
       webPreferences.nodeIntegrationInSubFrames = false;
       webPreferences.contextIsolation = false;
       webPreferences.disableHtmlFullscreenWindowResize = true;
       (webPreferences as Record<string, unknown>).allowFileAccessFromFileURLs = true;
+      (webPreferences as Record<string, unknown>).webSecurity = false;
       if (previewPasskeys.bridgeEnabled) {
         webPreferences.additionalArguments = [
           ...(webPreferences.additionalArguments ?? []),
