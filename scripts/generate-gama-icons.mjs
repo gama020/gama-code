@@ -48,7 +48,7 @@ for (let i = 0; i < w * h; i++) {
   }
 }
 
-// Save raw extracted glyph
+// Save raw extracted glyph cropped tightly to 82x134
 const extractChild = NodeChildProcess.spawnSync(
   "magick",
   [
@@ -71,25 +71,29 @@ if (extractChild.status !== 0) {
 console.log("✓ Extracted crisp G glyph (/tmp/gama_g_tight.png)");
 
 // 2. Generate macOS Master 1024x1024 Icon
-// Standard macOS grid: 824x824 squircle centered in 1024x1024 with drop shadow.
-// G height is 450px (54.6% of squircle, matching Photoshop proportion).
+// Full-bleed squircle (rx=224) prevents macOS Dock from adding a white backing plate.
+// G height is 572px (55.8% of canvas, matching Photoshop's breathing room).
+const baseSvg = `<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" rx="224" ry="224" fill="#141c26"/>
+  <rect x="1.5" y="1.5" width="1021" height="1021" rx="222.5" ry="222.5" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="3"/>
+</svg>`;
 
-// Ensure we have a clean Apple squircle background with official drop shadow
+await NodeFSP.writeFile("/tmp/gama_base_1024.svg", baseSvg);
 NodeChildProcess.execSync(
-  'magick /tmp/original-macos-1024.png -fill "#000000" -draw "rectangle 140,100 884,924" /tmp/gama_apple_squircle.png',
+  "magick -background none /tmp/gama_base_1024.svg /tmp/gama_base_1024.png",
 );
 
-// Scale G glyph to 275x450 with Lanczos and sharpened alpha curve
+// Scale G glyph to 350x572 with Lanczos and sharpened alpha curve
 NodeChildProcess.execSync(
-  "magick /tmp/gama_g_tight.png -filter Lanczos -resize 275x450 -channel A -level 25%,75% +channel /tmp/gama_g_450.png",
+  "magick /tmp/gama_g_tight.png -filter Lanczos -resize 350x572 -channel A -level 25%,75% +channel /tmp/gama_g_572.png",
 );
 
-// Composite G glyph centered at (375, 287)
+// Composite G glyph centered at (337, 226)
 const master1024 = NodePath.join(repoRoot, "assets/prod/black-macos-1024.png");
 NodeChildProcess.execSync(
-  `magick /tmp/gama_apple_squircle.png /tmp/gama_g_450.png -geometry +375+287 -composite "${master1024}"`,
+  `magick /tmp/gama_base_1024.png /tmp/gama_g_572.png -geometry +337+226 -composite "${master1024}"`,
 );
-console.log("✓ Generated Apple HIG-compliant macOS master 1024x1024:", master1024);
+console.log("✓ Generated full-bleed macOS master 1024x1024:", master1024);
 
 // Copy to universal (Linux) and iOS
 const universal1024 = NodePath.join(repoRoot, "assets/prod/black-universal-1024.png");
@@ -115,31 +119,9 @@ for (const env of ["dev", "nightly"]) {
 }
 
 // 3. Generate Windows Master & Multi-Resolution ICO
-// In Windows 11 taskbar, app icons look best with 88% squircle and subtle soft shadow.
-const winSvg = `<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="win-shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.32"/>
-    </filter>
-  </defs>
-  <rect x="16" y="16" width="224" height="224" rx="50" ry="50" fill="#000000" filter="url(#win-shadow)"/>
-  <rect x="16" y="16" width="224" height="224" rx="50" ry="50" fill="#0b0f14"/>
-  <rect x="16.5" y="16.5" width="223" height="223" rx="49.5" ry="49.5" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
-</svg>`;
-await NodeFSP.writeFile("/tmp/gama_win_base.svg", winSvg);
-NodeChildProcess.execSync("magick -background none /tmp/gama_win_base.svg /tmp/gama_win_base.png");
-
-// Scale G to 75x122 centered at (90, 67)
-NodeChildProcess.execSync(
-  "magick /tmp/gama_g_tight.png -filter Lanczos -resize 75x122 -channel A -level 20%,80% +channel /tmp/gama_win_g.png",
-);
-NodeChildProcess.execSync(
-  "magick /tmp/gama_win_base.png /tmp/gama_win_g.png -geometry +90+67 -composite /tmp/gama_win_master256.png",
-);
-
 const windowsIco = NodePath.join(repoRoot, "assets/prod/t3-black-windows.ico");
 NodeChildProcess.execSync(
-  `magick /tmp/gama_win_master256.png -define icon:auto-resize=256,128,64,48,32,24,16 "${windowsIco}"`,
+  `magick "${master1024}" -define icon:auto-resize=256,128,64,48,32,24,16 "${windowsIco}"`,
 );
 console.log("✓ Generated multi-resolution Windows ICO:", windowsIco);
 
@@ -153,7 +135,6 @@ for (const env of ["dev", "nightly"]) {
 
 // 4. Generate Dedicated Web Favicons & Apple Touch Icon
 // Tailored pixel boundaries: 16x16 (rx=3), 32x32 (rx=6), 180x180 (rx=38).
-
 function generateFavicon(size, rx, gHeight, outPath) {
   const gW = Math.round(82 * (gHeight / 134));
   const gH = gHeight;
@@ -167,16 +148,14 @@ function generateFavicon(size, rx, gHeight, outPath) {
   const margin = size <= 16 ? 0 : size <= 32 ? 1 : 2;
   const sqSize = size - margin * 2;
   const svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-    <rect x="${margin}" y="${margin}" width="${sqSize}" height="${sqSize}" rx="${rx}" ry="${rx}" fill="#0b0f14"/>
+    <rect x="${margin}" y="${margin}" width="${sqSize}" height="${sqSize}" rx="${rx}" ry="${rx}" fill="#141c26"/>
     <rect x="${margin + 0.5}" y="${margin + 0.5}" width="${sqSize - 1}" height="${sqSize - 1}" rx="${rx - 0.5}" ry="${rx - 0.5}" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1"/>
   </svg>`;
 
   NodeChildProcess.spawnSync(
     "magick",
     ["-background", "none", "svg:-", `/tmp/gama_fav_base_${size}.png`],
-    {
-      input: svg,
-    },
+    { input: svg },
   );
 
   NodeChildProcess.execSync(
