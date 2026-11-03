@@ -38,7 +38,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build web, server, and desktop bundles
-        run: ./node_modules/.bin/vp run --filter @t3tools/desktop build
+        run: pnpm run build:desktop
 
       - name: Build macOS Apple Silicon DMG
         run: node scripts/build-desktop-artifact.ts --platform mac --target dmg --arch arm64 --skip-build
@@ -85,7 +85,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build web, server, and desktop bundles
-        run: ./node_modules/.bin/vp run --filter @t3tools/desktop build
+        run: pnpm run build:desktop
 
       - name: Build Linux AppImage & DEB
         run: node scripts/build-desktop-artifact.ts --platform linux --target AppImage --arch x64 --skip-build
@@ -124,7 +124,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build web, server, and desktop bundles
-        run: .\node_modules\.bin\vp run --filter @t3tools/desktop build
+        run: pnpm run build:desktop
 
       - name: Build Windows NSIS Installer
         run: node scripts/build-desktop-artifact.ts --platform win --target nsis --arch x64 --skip-build
@@ -139,7 +139,7 @@ jobs:
     name: Publish Release to GitHub
     needs: [build-macos, build-linux, build-windows]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -149,5 +149,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v0.1.6' }}
           files: all-artifacts/**/*
           generate_release_notes: true
