@@ -305,7 +305,8 @@ export const openSystemSettings = DesktopIpc.makeIpcMethod({
     if (environment.platform !== "darwin") return false;
     const owner = Electron.BrowserWindow.getFocusedWindow();
     const opened = yield* shell.openSystemSettings(pane);
-    if (opened && environment.isPackaged) {
+    // The floating helper only knows how to poll Full Disk Access.
+    if (opened && pane === "full-disk-access" && environment.isPackaged) {
       const permissions = yield* MacPermissions.MacPermissions;
       const isGranted = yield* safariPermissionCheck;
       yield* permissions.showHelper(pane, owner, isGranted);

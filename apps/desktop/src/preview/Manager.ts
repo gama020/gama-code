@@ -429,10 +429,25 @@ const IN_PLACE_DENIED_PROTOCOLS = new Set([
   "chrome:",
   "data:",
   "devtools:",
+  "file:",
   "filesystem:",
   "javascript:",
   "view-source:",
 ]);
+
+const isNavigationLoadFailure = (cause: unknown): boolean => {
+  const message = cause instanceof Error ? cause.message : String(cause);
+  // `loadURL` rejects for every navigation failure that `did-fail-load` already published to the
+  // tab, e.g. "ERR_ADDRESS_UNREACHABLE (-109) loading 'http://…'". Other rejections are real.
+  return (
+    /^ERR_[A-Z_]+ \(-?\d+\) loading /.test(message) || message.includes("operation was aborted")
+  );
+};
+
+const isTargetClosed = (cause: unknown): boolean => {
+  const message = cause instanceof Error ? cause.message : String(cause);
+  return message.includes("target closed") || message.includes("Object has been destroyed");
+};
 
 /** Popups bypass will-attach-webview hardening and would inherit the picker's contextIsolation:false. */
 const POPUP_WINDOW_OPTIONS = {
@@ -1116,12 +1131,19 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
               wcDebugger.attach("1.3");
             });
             // Set an opaque base before first paint or background-less dark pages retain white-on-white text.
+            // A tab that closes between attach and this command rejects with "target closed"; losing that
+            // race must not fail the whole session.
             yield* attemptPromise(
               { operation: "initializeDebugger.defaultBackground", webContentsId: wc.id },
               () =>
                 wcDebugger.sendCommand("Emulation.setDefaultBackgroundColorOverride", {
                   color: { r: 255, g: 255, b: 255, a: 1 },
                 }),
+            ).pipe(
+              Effect.catchIf(
+                (error) => isTargetClosed(error.cause),
+                () => Effect.void,
+              ),
             );
             return [
               control,
@@ -1489,11 +1511,7 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
       }
       if (isPreviewRefreshShortcut(input)) {
         event.preventDefault();
-        runFork(
-          attempt({ operation: "shortcut.refresh", tabId, webContentsId: wc.id }, () =>
-            wc.reload(),
-          ).pipe(Effect.ignore),
-        );
+        runFork(refresh(tabId).pipe(Effect.ignore));
         return;
       }
     };
@@ -1986,7 +2004,14 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
       );
       return;
     }
-    if (wc.getURL() === url) {
+    const tabs = yield* SynchronizedRef.get(tabsRef);
+    const tab = tabs.get(tabId);
+    const isFailed = tab?.navStatus.kind === "LoadFailed";
+
+    // Immediately clear LoadFailed and transition to Loading so UI updates instantly
+    yield* update(tabId, { navStatus: { kind: "Loading", url, title: wc.getTitle() } });
+
+    if (wc.getURL() === url && !isFailed) {
       yield* attempt({ operation: "navigate.reload", tabId, webContentsId: wc.id }, () =>
         wc.reload(),
       );
@@ -1994,6 +2019,11 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
     }
     yield* attemptPromise({ operation: "navigate.loadURL", tabId, webContentsId: wc.id }, () =>
       wc.loadURL(url),
+    ).pipe(
+      Effect.catchIf(
+        (error) => isNavigationLoadFailure(error.cause),
+        () => Effect.void,
+      ),
     );
   });
 
@@ -2014,7 +2044,30 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
     withWebContents("goForward", tabId, (wc) => {
       if (wc.navigationHistory.canGoForward()) wc.navigationHistory.goForward();
     });
-  const refresh = (tabId: string) => withWebContents("refresh", tabId, (wc) => wc.reload());
+  const refresh = Effect.fn("PreviewManager.refresh")(function* (tabId: string) {
+    const tabs = yield* SynchronizedRef.get(tabsRef);
+    const tab = tabs.get(tabId);
+    const wc = yield* requireWebContents(tabId);
+    if (tab && tab.navStatus.kind === "LoadFailed" && tab.navStatus.url) {
+      const failedUrl = tab.navStatus.url;
+      yield* update(tabId, {
+        navStatus: { kind: "Loading", url: failedUrl, title: wc.getTitle() },
+      });
+      yield* attemptPromise({ operation: "refresh.loadURL", tabId, webContentsId: wc.id }, () =>
+        wc.loadURL(failedUrl),
+      ).pipe(
+        Effect.catchIf(
+          (error) => isNavigationLoadFailure(error.cause),
+          () => Effect.void,
+        ),
+      );
+      return;
+    }
+    yield* update(tabId, {
+      navStatus: { kind: "Loading", url: wc.getURL(), title: wc.getTitle() },
+    });
+    yield* attempt({ operation: "refresh", tabId, webContentsId: wc.id }, () => wc.reload());
+  });
   const hardReload = (tabId: string) =>
     withWebContents("hardReload", tabId, (wc) => wc.reloadIgnoringCache());
 

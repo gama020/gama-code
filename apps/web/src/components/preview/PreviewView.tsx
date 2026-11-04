@@ -296,8 +296,15 @@ export function PreviewView({
   };
 
   const handleRefresh = () => {
-    if (isServerTab) serverSurfaceRef.current?.reload();
-    else if (previewBridge && runtimeTabId) void previewBridge.refresh(runtimeTabId);
+    if (isServerTab) {
+      serverSurfaceRef.current?.reload();
+    } else if (previewBridge && runtimeTabId) {
+      if (navStatus._tag === "LoadFailed" && navStatus.url) {
+        void navigateToResolvedUrl(navStatus.url);
+      } else {
+        void previewBridge.refresh(runtimeTabId);
+      }
+    }
   };
 
   const adjustServerTab = async (change: Omit<PreviewAdjustInput, "threadId" | "tabId">) => {
@@ -442,7 +449,9 @@ export function PreviewView({
     snapshot,
   );
   const moveLabel =
-    moveTarget === "server" ? `Open in ${environmentLabel}'s browser` : "Open on this computer";
+    moveTarget === "server"
+      ? `Abrir no navegador do ${environmentLabel}`
+      : "Abrir neste computador";
   const handleMoveTab = async () => {
     if (!moveTarget || !tabId || !snapshot) return;
     const result = await openPreviewSession({
@@ -1102,6 +1111,17 @@ export function PreviewView({
               code={navStatus.code}
               description={navStatus.description}
               onReload={handleRefresh}
+              onOpenInBrowser={() =>
+                void localApi?.shell.openExternal(navStatus.url).catch(() => undefined)
+              }
+              onOpenLocalNetworkSettings={
+                typeof window !== "undefined" && window.desktopBridge
+                  ? () =>
+                      void localApi?.shell
+                        .openSystemSettings("local-network")
+                        .catch(() => undefined)
+                  : undefined
+              }
               {...(moveTarget === "server"
                 ? { move: { label: moveLabel, onMove: () => void handleMoveTab() } }
                 : {})}
