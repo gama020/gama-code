@@ -62,7 +62,6 @@ export function SidebarThreadHeader({
   return (
     <div className="flex items-center gap-1">
       <div
-        ref={searchFieldRef}
         className={cn(
           "flex h-7.5 min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-xs font-normal transition-colors",
           "bg-white/5 text-muted-foreground hover:text-foreground",
