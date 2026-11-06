@@ -79,3 +79,33 @@ export function browserResponsiveViewportForToggle(input: {
     : FALLBACK_RESPONSIVE_VIEWPORT_SIZE;
   return { _tag: "freeform", ...size };
 }
+
+/** The desktop width local prototypes are designed at; `fill` would reflow them into the panel. */
+const LOCAL_DOCUMENT_VIEWPORT: PreviewViewportSetting = {
+  _tag: "preset",
+  presetId: "laptop-1280x800",
+  width: 1280,
+  height: 800,
+};
+
+function isLocalDocumentUrl(url: string): boolean {
+  if (url.startsWith("file:")) return true;
+  try {
+    const parsed = new URL(url);
+    return parsed.pathname.includes("/assets/") && /\.html?$/i.test(parsed.pathname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A local HTML file is a fixed desktop design, so a new tab opens it at laptop width instead of
+ * reflowing it into whatever width the panel happens to have. Explicit viewport choices win.
+ */
+export function resolvePreviewViewportForUrl(
+  url: string | undefined,
+  viewport: PreviewViewportSetting,
+): PreviewViewportSetting {
+  if (url === undefined || viewport._tag !== "fill" || !isLocalDocumentUrl(url)) return viewport;
+  return LOCAL_DOCUMENT_VIEWPORT;
+}
