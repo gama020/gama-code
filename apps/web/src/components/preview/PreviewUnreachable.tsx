@@ -63,7 +63,7 @@ export function PreviewUnreachable({
   move,
 }: Props) {
   const [showDetails, setShowDetails] = useState(false);
-  const host = safeHost(url) ?? url;
+  const host = previewTargetLabel(url);
   const friendly = describePreviewError(description);
   const errorLabel = description.length > 0 ? description : `ERR_${Math.abs(code) || "FAILED"}`;
   const networkHint = localNetworkHint({ url, code, description });
@@ -161,8 +161,29 @@ function ErrorIcon({ className }: { className?: string }) {
 
 function safeHost(url: string): string | null {
   try {
-    return new URL(url).host;
+    const host = new URL(url).host;
+    return host.length > 0 ? host : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * A `file://` URL has no host, so the error card used to print an empty label and hide the one
+ * detail that matters: which file went missing.
+ */
+function previewTargetLabel(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "file:") {
+      try {
+        return decodeURIComponent(parsed.pathname);
+      } catch {
+        return parsed.pathname;
+      }
+    }
+    return parsed.host.length > 0 ? parsed.host : url;
+  } catch {
+    return url;
   }
 }

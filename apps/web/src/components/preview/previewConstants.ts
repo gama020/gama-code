@@ -20,6 +20,12 @@ export const PREVIEW_ERROR_CODE_MESSAGES: Readonly<Record<string, string>> = Obj
   ERR_CERT_DATE_INVALID: "O certificado está expirado ou ainda não é válido",
   ERR_SSL_PROTOCOL_ERROR: "Falha no protocolo TLS",
   ERR_TOO_MANY_REDIRECTS: "Redirecionamentos demais",
+  ERR_FILE_NOT_FOUND: "O arquivo não existe mais neste caminho",
+  ERR_FILE_EXISTS: "Já existe um arquivo neste caminho",
+  ERR_INVALID_URL: "O endereço é inválido",
+  ERR_DISALLOWED_URL_SCHEME: "Este tipo de endereço não pode ser aberto aqui",
+  ERR_ABORTED: "A navegação foi interrompida",
+  ERR_FAILED: "A página não carregou",
 });
 
 /**

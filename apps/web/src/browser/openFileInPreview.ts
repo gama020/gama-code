@@ -4,6 +4,7 @@ import type {
   EnvironmentId,
   PreviewOpenInput,
   PreviewSessionSnapshot,
+  PreviewViewportSetting,
   ScopedThreadRef,
 } from "@t3tools/contracts";
 import { mediaFileReference } from "@t3tools/client-runtime/media-reference";
@@ -34,6 +35,27 @@ import { resolveBrowserDefaults } from "./browserDefaults";
 
 export const isBrowserPreviewFile = (path: string): boolean =>
   /\.(?:html?|pdf)$/i.test(path.split(/[?#]/, 1)[0] ?? "");
+
+/** The desktop width local prototypes are designed at; `fill` would reflow them into the panel. */
+const LOCAL_DOCUMENT_VIEWPORT = { width: 1280, height: 800 } as const;
+
+function isLocalDocumentUrl(url: string): boolean {
+  if (url.startsWith("file:")) return true;
+  try {
+    const parsed = new URL(url);
+    return parsed.pathname.includes("/assets/") && /\.html?$/i.test(parsed.pathname);
+  } catch {
+    return false;
+  }
+}
+
+function previewViewportForUrl(
+  url: string,
+  viewport: PreviewViewportSetting,
+): PreviewViewportSetting {
+  if (viewport._tag !== "fill" || !isLocalDocumentUrl(url)) return viewport;
+  return { _tag: "freeform", ...LOCAL_DOCUMENT_VIEWPORT };
+}
 
 export class BrowserPreviewUnavailableError extends Schema.TaggedError<BrowserPreviewUnavailableError>()(
   "BrowserPreviewUnavailableError",
@@ -83,7 +105,7 @@ export async function openUrlInPreview<E>(input: {
     input: {
       threadId: threadRef.threadId,
       url: input.url,
-      viewport: defaults.viewport,
+      viewport: previewViewportForUrl(input.url, defaults.viewport),
       profileId: input.profileId ?? defaults.profileId,
       ...(runtime === undefined ? {} : { runtime }),
     },

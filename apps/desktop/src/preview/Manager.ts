@@ -65,6 +65,7 @@ import {
   PREVIEW_PICTURE_IN_PICTURE_FRAME_CHANNEL,
 } from "../ipc/channels.ts";
 import * as DesktopBrowserHost from "./DesktopBrowserHost.ts";
+import * as PreviewFileWatcher from "./PreviewFileWatcher.ts";
 import * as PreviewPasskeys from "./Passkeys.ts";
 import * as BrowserSession from "./BrowserSession.ts";
 import {
@@ -1273,6 +1274,19 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
     const sync = () => runFork(syncState(true));
     const syncNavigation = () => runFork(syncState(false, true));
     const syncInPageNavigation = () => runFork(syncState(false));
+    // A local prototype is edited by an agent while the tab stays open; without this the
+    // preview keeps painting the version that existed when the tab loaded.
+    const syncFileWatch = () => {
+      const url = wc.getURL();
+      if (PreviewFileWatcher.filePathFromUrl(url) === null) {
+        PreviewFileWatcher.previewFileWatcher.unwatch(tabId);
+        return;
+      }
+      PreviewFileWatcher.previewFileWatcher.watch(tabId, url, () => {
+        if (wc.isDestroyed()) return;
+        wc.reload();
+      });
+    };
     const restoreRecordingCursor = () =>
       runFork(
         Effect.gen(function* () {
@@ -1533,9 +1547,11 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
       scope,
       attempt({ operation: "detachListeners", tabId, webContentsId: wc.id }, () => {
         cancelFaviconCapture();
+        PreviewFileWatcher.previewFileWatcher.unwatch(tabId);
         wc.off("did-start-navigation", navigationStarted);
         wc.off("did-navigate", syncNavigation);
         wc.off("did-navigate-in-page", syncInPageNavigation);
+        wc.off("did-finish-load", syncFileWatch);
         wc.off("page-title-updated", sync);
         wc.off("page-favicon-updated", faviconUpdated as never);
         wc.off("did-start-loading", sync);
@@ -1557,6 +1573,7 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
         wc.on("did-start-navigation", navigationStarted);
         wc.on("did-navigate", syncNavigation);
         wc.on("did-navigate-in-page", syncInPageNavigation);
+        wc.on("did-finish-load", syncFileWatch);
         wc.on("page-title-updated", sync);
         wc.on("page-favicon-updated", faviconUpdated as never);
         wc.on("did-start-loading", sync);
