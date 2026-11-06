@@ -72,7 +72,11 @@ import { PreviewChromeRow } from "./PreviewChromeRow";
 import { PreviewEmptyState } from "./PreviewEmptyState";
 import { PreviewMoreMenu, type PreviewMoreMenuActions } from "./PreviewMoreMenu";
 import { commitBrowserViewportChange } from "~/browser/browserViewportActions";
-import { browserResponsiveViewportForToggle, useBrowserDefaults } from "~/browser/browserDefaults";
+import {
+  browserResponsiveViewportForToggle,
+  resolvePreviewViewportForUrl,
+  useBrowserDefaults,
+} from "~/browser/browserDefaults";
 import { BrowserDeviceToolbar } from "~/browser/BrowserDeviceToolbar";
 import { BROWSER_DEVICE_TOOLBAR_HEIGHT } from "~/browser/browserViewportLayout";
 import { useBrowserLayoutZoomFactor } from "~/browser/useBrowserLayoutZoomFactor";
@@ -237,6 +241,17 @@ export function PreviewView({
     runtimeTabId ? (state.byTabId[runtimeTabId]?.rect ?? null) : null,
   );
 
+  // A reused tab keeps its old viewport, so opening a local document into it must widen the
+  // viewport here as well, not only when a fresh tab is created.
+  const applyLocalDocumentViewport = async (resolvedUrl: string) => {
+    if (!runtimeTabId || !tabId || viewport._tag !== "fill") return;
+    const next = resolvePreviewViewportForUrl(resolvedUrl, viewport);
+    if (next._tag === "fill") return;
+    await commitBrowserViewportChange({ threadRef, tabId, runtimeTabId }, next).catch(
+      () => undefined,
+    );
+  };
+
   const navigateToResolvedUrl = async (resolvedUrl: string) => {
     if (isServerTab && serverSurfaceRef.current) {
       if (serverInputDisabled) return false;
@@ -245,6 +260,7 @@ export function PreviewView({
       return true;
     }
     if (runtimeTabId && previewBridge) {
+      await applyLocalDocumentViewport(resolvedUrl);
       await previewBridge.navigate(runtimeTabId, resolvedUrl);
       rememberPreviewUrl(threadRef, resolvedUrl);
       return true;
