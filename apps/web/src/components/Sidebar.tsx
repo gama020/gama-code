@@ -68,7 +68,6 @@ import {
   ListFilterIcon,
   PlusIcon,
   SettingsIcon,
-  SquarePenIcon,
 } from "lucide-react";
 import {
   useEffect,
@@ -3436,29 +3435,21 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                       };
                       const from = isContextDrag ? null : (dragState?.activeSection ?? null);
                       const items: ReactNode[] = [
-                        <li key="action-new-thread" className="list-none px-2 pt-1 pb-1.5">
+                        <li key="action-new-thread" className="list-none px-2 pt-1 pb-1">
                           <button
                             type="button"
                             onClick={handleNewThreadClick}
-                            className="group flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg bg-sidebar-row-hover/60 hover:bg-sidebar-row-hover px-3 py-2 text-xs font-medium text-foreground ring-1 ring-border/40 hover:ring-border transition-all active:scale-[0.99]"
+                            className="flex h-8.5 w-full cursor-pointer items-center gap-2 rounded-lg bg-transparent px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
                           >
-                            <div className="flex items-center gap-2">
-                              <SquarePenIcon className="size-3.5 text-primary shrink-0" />
-                              <span className="font-medium">
-                                {t("chat.newThread", "Novo chat")}
+                            <span className="grid size-4.5 shrink-0 place-items-center text-gama-accent">
+                              <PlusIcon className="size-3.5 stroke-2" />
+                            </span>
+                            <span className="truncate">{t("chat.newThread", "Novo chat")}</span>
+                            {scopedProjectGroups[0]?.displayName ? (
+                              <span className="ml-auto max-w-24 truncate text-3xs font-normal text-muted-foreground/60">
+                                {scopedProjectGroups[0].displayName}
                               </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-3xs text-muted-foreground">
-                              {scopedProjectGroups[0]?.displayName ? (
-                                <span className="max-w-[100px] truncate">
-                                  {scopedProjectGroups[0].displayName}
-                                </span>
-                              ) : newThreadShortcutLabel ? (
-                                <kbd className="font-mono text-3xs opacity-80">
-                                  {newThreadShortcutLabel}
-                                </kbd>
-                              ) : null}
-                            </div>
+                            ) : null}
                           </button>
                         </li>,
                         <SidebarDraftBlock

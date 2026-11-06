@@ -80,6 +80,8 @@ export type AcpSessionRuntimeEvent =
 const defaultSessionLoadTimeout = Duration.seconds(90);
 const defaultSessionLoadReplayIdleGap = Duration.seconds(2);
 const defaultCancelTimeout = Duration.seconds(15);
+const defaultInitializeTimeout = Duration.seconds(60);
+const defaultAuthenticateTimeout = Duration.seconds(120);
 const maxStartupMetadataUpdates = 32;
 // Antigravity can emit an accepted 16 KiB Google authorization URL on stderr.
 const maxStderrChunkLength = 32_768;
@@ -100,6 +102,8 @@ export interface AcpSessionRuntimeOptions {
   readonly resumeMethod?: "load" | "resume";
   readonly sessionLoadTimeout?: Duration.Input;
   readonly sessionLoadReplayIdleGap?: Duration.Input;
+  readonly initializeTimeout?: Duration.Input;
+  readonly authenticateTimeout?: Duration.Input;
   readonly interruptPromptOnCancel?: boolean;
   readonly cancelMeta?: EffectAcpSchema.CancelNotification["_meta"];
   readonly initializeMeta?: EffectAcpSchema.InitializeRequest["_meta"];
@@ -1362,6 +1366,34 @@ export const make = Effect.fn("AcpSessionRuntime.make")(function* (
       ),
     );
 
+  // A provider whose credential refresh stalls must fail the turn instead of leaving it
+  // "starting" forever; nothing else times these two handshakes out.
+  const initializeTimeout = Duration.fromInputUnsafe(
+    options.initializeTimeout ?? defaultInitializeTimeout,
+  );
+  const authenticateTimeout = Duration.fromInputUnsafe(
+    options.authenticateTimeout ?? defaultAuthenticateTimeout,
+  );
+  const withRequestTimeout = <A>(
+    method: string,
+    timeout: Duration.Duration,
+    effect: Effect.Effect<A, EffectAcpErrors.AcpError>,
+  ): Effect.Effect<A, EffectAcpErrors.AcpError> =>
+    effect.pipe(
+      Effect.timeoutOrElse({
+        duration: timeout,
+        orElse: () =>
+          Effect.fail(
+            new EffectAcpErrors.AcpTransportError({
+              operation: "call-rpc",
+              method,
+              detail: `The ACP agent did not answer ${method} within ${Duration.format(timeout)}.`,
+              cause: undefined,
+            }),
+          ),
+      }),
+    );
+
   const spawnCommand =
     options.spawn.shell === false
       ? { command: options.spawn.command, args: options.spawn.args, shell: false }
@@ -2050,10 +2082,10 @@ export const make = Effect.fn("AcpSessionRuntime.make")(function* (
       ...(options.initializeMeta === undefined ? {} : { _meta: options.initializeMeta }),
     } satisfies EffectAcpSchema.InitializeRequest;
 
-    const initializeResult = yield* runLoggedRequest(
+    const initializeResult = yield* withRequestTimeout(
       "initialize",
-      initializePayload,
-      acp.agent.initialize(initializePayload),
+      initializeTimeout,
+      runLoggedRequest("initialize", initializePayload, acp.agent.initialize(initializePayload)),
     );
     yield* options.onInitialized?.(initializeResult) ?? Effect.void;
     return initializeResult;
@@ -2149,10 +2181,14 @@ export const make = Effect.fn("AcpSessionRuntime.make")(function* (
         const authenticatePayload = {
           methodId: authMethodId,
         } satisfies EffectAcpSchema.AuthenticateRequest;
-        yield* runLoggedRequest(
+        yield* withRequestTimeout(
           "authenticate",
-          authenticatePayload,
-          acp.agent.authenticate(authenticatePayload),
+          authenticateTimeout,
+          runLoggedRequest(
+            "authenticate",
+            authenticatePayload,
+            acp.agent.authenticate(authenticatePayload),
+          ),
         );
       },
     );
@@ -2221,10 +2257,14 @@ export const make = Effect.fn("AcpSessionRuntime.make")(function* (
       const authenticatePayload = {
         methodId: options.authMethodId ?? "",
       } satisfies EffectAcpSchema.AuthenticateRequest;
-      yield* runLoggedRequest(
+      yield* withRequestTimeout(
         "authenticate",
-        authenticatePayload,
-        acp.agent.authenticate(authenticatePayload),
+        authenticateTimeout,
+        runLoggedRequest(
+          "authenticate",
+          authenticatePayload,
+          acp.agent.authenticate(authenticatePayload),
+        ),
       );
     }
     const { sessionId, sessionSetupResult } = yield* setupSession.pipe(
@@ -2385,7 +2425,11 @@ export const make = Effect.fn("AcpSessionRuntime.make")(function* (
     authenticate: (methodId) =>
       initialize.pipe(
         Effect.andThen(
-          runLoggedRequest("authenticate", { methodId }, acp.agent.authenticate({ methodId })),
+          withRequestTimeout(
+            "authenticate",
+            authenticateTimeout,
+            runLoggedRequest("authenticate", { methodId }, acp.agent.authenticate({ methodId })),
+          ),
         ),
         Effect.asVoid,
       ),

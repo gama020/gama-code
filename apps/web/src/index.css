@@ -120,7 +120,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
   --glass-opacity: 80%;
   --glass-saturation: 1.14;
   --desktop-window-right-resize-inset: 0px;
-  --workspace-topbar-height: 52px;
+  --workspace-topbar-height: 42px;
   --workspace-controls-top: 0px;
   --workspace-controls-left: calc(env(safe-area-inset-left) + 0.75rem);
   --workspace-controls-right: calc(env(safe-area-inset-right) + 0.75rem);
@@ -142,18 +142,68 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
     --workspace-gutter: 1.25rem;
   }
 
+  /* Gama Os Sidebar 2.0 Design Tokens */
+  --gama-rail-width: 56px;
+  --gama-panel-width: 268px;
+  --gama-titlebar-height: 42px;
+
+  --gama-rail-bg: #101014;
+  --gama-rail-grad: linear-gradient(180deg, #1a1a21 0%, #121217 55%, #0d0d11 100%);
+  --gama-panel-grad: linear-gradient(155deg, #ffffff 0%, #fbfcfd 42%, #f4f6f9 100%);
+  --gama-canvas-bg: #f4f5f7;
+  --gama-main-surface: #ffffff;
+
+  --gama-text-primary: #17181c;
+  --gama-text-mid: #4b5563;
+  --gama-text-muted: #6b7280;
+  --gama-text-faint: #9aa1ac;
+
+  --gama-row-hover: rgba(0, 0, 0, 0.035);
+  --gama-row-active: #edf0f4;
+  --gama-row-active-text: #14161a;
+  --gama-field-bg: #f1f3f6;
+
+  --gama-accent: #185df1;
+  --gama-pink: #f472b6;
+  --gama-green: #22c55e;
+  --gama-arc: #6f9bff;
+
+  --gama-shadow-rail: 0 10px 26px -14px rgba(8, 10, 18, 0.55);
+  --gama-shadow-panel: 0 1px 2px rgba(16, 24, 40, 0.04), 0 20px 44px -30px rgba(16, 24, 40, 0.35);
+  --gama-shadow-main: 0 1px 2px rgba(16, 24, 40, 0.04), 0 24px 50px -34px rgba(16, 24, 40, 0.28);
+  --gama-shadow-flyout: 0 18px 44px -18px rgba(16, 24, 40, 0.4), 0 2px 6px rgba(16, 24, 40, 0.06);
+
   @variant dark {
     --appearance-contrast-target: white;
     --app-scrollbar-thumb: rgb(255 255 255 / 8%);
     --app-scrollbar-thumb-hover: rgb(255 255 255 / 12%);
     --glass-blur: 16px;
     --glass-saturation: 1.08;
+
+    --gama-canvas-bg: #08080b;
+    --gama-main-surface: #101014;
+    --gama-rail-grad: linear-gradient(180deg, #23232b 0%, #191920 55%, #131318 100%);
+    --gama-panel-grad: linear-gradient(155deg, #1c1c22 0%, #18181d 46%, #141418 100%);
+
+    --gama-text-primary: #ececf0;
+    --gama-text-mid: #b9bbc4;
+    --gama-text-muted: #9a9aa6;
+    --gama-text-faint: #6d6d7a;
+
+    --gama-row-hover: rgba(255, 255, 255, 0.045);
+    --gama-row-active: rgba(255, 255, 255, 0.075);
+    --gama-row-active-text: #ffffff;
+    --gama-field-bg: rgba(255, 255, 255, 0.055);
+
+    --gama-shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.35), 0 20px 44px -30px rgba(0, 0, 0, 0.75);
+    --gama-shadow-main: 0 1px 2px rgba(0, 0, 0, 0.4), 0 24px 50px -34px rgba(0, 0, 0, 0.8);
+    --gama-shadow-flyout: 0 20px 48px -16px rgba(0, 0, 0, 0.85), 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 }
 
 .wco {
   --native-titlebar-height: env(titlebar-area-height, 0px);
-  --workspace-topbar-height: max(40px, env(titlebar-area-height, 52px));
+  --workspace-topbar-height: max(40px, env(titlebar-area-height, 42px));
   --workspace-controls-top: env(titlebar-area-y, 0px);
   --workspace-controls-left: calc(env(titlebar-area-x, 0px) + 0.75rem);
   --workspace-controls-right: calc(
@@ -286,6 +336,14 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
   --color-sidebar-row-active: var(--sidebar-row-active);
   --color-sidebar-row-selected: var(--sidebar-row-selected);
   --color-sidebar-border: var(--contrast-sidebar-border);
+  --color-gama-accent: var(--gama-accent);
+  --color-gama-pink: var(--gama-pink);
+  --color-gama-green: var(--gama-green);
+  --color-gama-arc: var(--gama-arc);
+  --color-gama-muted: #9a9aa8;
+  --color-gama-hover: #e7e7ee;
+  --color-gama-canvas: var(--gama-canvas-bg);
+  --color-gama-main: var(--gama-main-surface);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -1099,6 +1157,29 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
   background-image: var(--surface-grain);
   background-repeat: repeat;
   background-size: var(--surface-grain-size);
+}
+
+@utility gama-rail {
+  background: var(--gama-rail-grad);
+  box-shadow: var(--gama-shadow-rail);
+}
+
+@utility gama-panel {
+  background: var(--gama-panel-grad);
+  box-shadow: var(--gama-shadow-panel);
+}
+
+@utility gama-main {
+  box-shadow: var(--gama-shadow-main);
+}
+
+@utility gama-flyout {
+  box-shadow: var(--gama-shadow-flyout);
+}
+
+@utility gama-avatar {
+  background: linear-gradient(135deg, #3d4b66, #202838);
+  color: #dfe5f2;
 }
 
 /* Suppress all transitions during theme changes */

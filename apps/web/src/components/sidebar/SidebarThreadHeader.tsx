@@ -65,9 +65,13 @@ export function SidebarThreadHeader({
     <div className="flex items-center gap-1">
       <div
         ref={searchFieldRef}
-        className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-sidebar-muted-foreground hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-within:bg-sidebar-row-hover focus-within:text-sidebar-foreground focus-within:ring-1 focus-within:ring-inset focus-within:ring-ring/70"
+        className={cn(
+          "flex h-7.5 min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-xs font-normal transition-colors",
+          "bg-white/5 text-muted-foreground hover:text-foreground",
+          "focus-within:ring-1 focus-within:ring-inset focus-within:ring-gama-accent/50 focus-within:bg-white/10",
+        )}
       >
-        <SearchIcon className="size-4 shrink-0 text-(--sidebar-icon-color)" />
+        <SearchIcon className="size-3.5 shrink-0 text-muted-foreground/60" />
         <SidebarInput
           ref={searchInputRef}
           nativeInput
@@ -75,8 +79,8 @@ export function SidebarThreadHeader({
           value={searchQuery}
           onChange={(event) => onSearchQueryChange(event.currentTarget.value)}
           onKeyDown={onSearchKeyDown}
-          placeholder={t("sidebar.searchThreads", "Search")}
-          aria-label={t("sidebar.searchThreads", "Search threads")}
+          placeholder={t("sidebar.searchThreads", "Buscar conversas...")}
+          aria-label={t("sidebar.searchThreads", "Buscar conversas")}
           role="combobox"
           aria-autocomplete="list"
           aria-expanded={resultsVisible}
@@ -93,8 +97,8 @@ export function SidebarThreadHeader({
             type="button"
             size="icon-micro"
             variant="ghost-muted"
-            className="shrink-0"
-            aria-label="Clear thread search"
+            className="shrink-0 size-4"
+            aria-label="Limpar busca"
             onClick={() => {
               onClearSearch();
               searchInputRef.current?.focus();
@@ -102,7 +106,11 @@ export function SidebarThreadHeader({
           >
             <XIcon className="size-3" />
           </Button>
-        ) : null}
+        ) : (
+          <kbd className="hidden sm:inline-block font-sans text-3xs text-muted-foreground/60 font-semibold px-1 py-0.5 rounded bg-muted/40">
+            esc
+          </kbd>
+        )}
       </div>
       <div className="flex shrink-0 items-center">
         {hasProjects ? (

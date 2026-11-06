@@ -85,12 +85,12 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
           event.preventDefault();
           props.onContextMenu(group, { x: event.clientX, y: event.clientY });
         }}
-        className="flex h-8 w-full cursor-pointer items-center gap-2 rounded-md px-2 text-left outline-none transition-colors hover:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        className="flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-1 focus-visible:ring-gama-accent/50 focus-visible:ring-inset"
       >
         <ChevronDownIcon
           aria-hidden
           className={cn(
-            "size-3.5 shrink-0 text-sidebar-muted-foreground transition-transform duration-150",
+            "size-3.5 shrink-0 text-muted-foreground/70 transition-transform duration-150",
             collapsed && "-rotate-90",
           )}
         />
@@ -101,11 +101,11 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
         ) : group.projectIcon?.kind === "lucide" ? (
           <ProjectFavicon project={group} className="size-4 shrink-0" />
         ) : collapsed ? (
-          <FolderIcon className="size-4 shrink-0 text-sidebar-muted-foreground group-hover/project-folder:text-sidebar-foreground transition-colors" />
+          <FolderIcon className="size-4 shrink-0 text-muted-foreground/80 group-hover/project-folder:text-foreground transition-colors" />
         ) : (
-          <FolderOpenIcon className="size-4 shrink-0 text-sidebar-muted-foreground group-hover/project-folder:text-sidebar-foreground transition-colors" />
+          <FolderOpenIcon className="size-4 shrink-0 text-muted-foreground/80 group-hover/project-folder:text-foreground transition-colors" />
         )}
-        <span className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/80 group-hover/project-folder:text-sidebar-foreground">
+        <span className="min-w-0 flex-1 truncate text-2xs font-semibold uppercase tracking-wider text-muted-foreground group-hover/project-folder:text-foreground">
           {group.displayName}
         </span>
         {group.environmentPresence === "local-only" ? (
@@ -124,7 +124,7 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
           </span>
         ) : null}
         {totalCount > 0 ? (
-          <span className="shrink-0 px-1.5 py-0.5 rounded-full text-3xs font-medium tabular-nums text-sidebar-muted-foreground bg-sidebar-border/40 group-hover/project-folder:opacity-0 pointer-coarse:opacity-0 transition-opacity">
+          <span className="shrink-0 px-1.5 py-0.5 rounded-full text-3xs font-medium tabular-nums text-muted-foreground bg-muted/40 border border-border/40 group-hover/project-folder:opacity-0 pointer-coarse:opacity-0 transition-opacity">
             {totalCount}
           </span>
         ) : null}

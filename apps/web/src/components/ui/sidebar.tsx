@@ -1,12 +1,10 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
-import { PanelLeft, PanelLeftClose } from "lucide";
 import * as React from "react";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Input, type InputProps } from "~/components/ui/input";
-import { MorphIcon } from "~/components/MorphIcon";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import {
   Sheet,
@@ -214,7 +212,7 @@ function SidebarProvider({
     <SidebarContext value={contextValue}>
       <div
         className={cn(
-          "group/sidebar-wrapper flex min-h-svh w-full",
+          "group/sidebar-wrapper flex min-h-svh w-full bg-gama-canvas",
           SIDEBAR_TITLEBAR_CONTROL_SIZE,
           className,
         )}
@@ -341,7 +339,14 @@ function Sidebar({
   return (
     <SidebarInstanceContext value={instanceContextValue}>
       <div
-        className="group peer hidden text-sidebar-foreground md:block"
+        className={cn(
+          "group peer relative hidden h-full shrink-0 text-sidebar-foreground md:flex flex-col overflow-hidden",
+          "[[data-panel-animations=true]_&]:transition-[width,opacity] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
+          state === "collapsed"
+            ? "w-0! min-w-0! opacity-0 pointer-events-none"
+            : "w-(--sidebar-width) opacity-100 md:mr-2",
+          className,
+        )}
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-collapsible-mode={collapsible}
         inert={offcanvasCollapsed}
@@ -351,42 +356,50 @@ function Sidebar({
         data-variant={variant}
       >
         <div
-          className={cn(
-            "relative w-(--sidebar-width) bg-transparent",
-            "[[data-panel-animations=true]_&]:transition-[width] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
-            "group-data-[collapsible=offcanvas]:w-0",
-            "group-data-[side=right]:rotate-180",
-            variant === "floating" || variant === "inset"
-              ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-              : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
-          )}
-          data-slot="sidebar-gap"
-        />
-        <div
-          className={cn(
-            "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) md:flex",
-            "[[data-panel-animations=true]_&]:transition-[left,right,width] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
-            side === "left"
-              ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-              : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-            variant === "floating" || variant === "inset"
-              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
-              : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
-            className,
-          )}
+          className="relative flex h-full w-(--sidebar-width) flex-col overflow-hidden bg-sidebar surface-grain md:rounded-2xl md:border md:border-black/5 md:dark:border-white/10 gama-panel"
+          data-sidebar="sidebar"
           data-slot="sidebar-container"
           {...props}
         >
-          <div
-            className="flex h-full w-full flex-col bg-sidebar surface-grain group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow-sm/5"
-            data-sidebar="sidebar"
-            data-slot="sidebar-inner"
-          >
-            {children}
-          </div>
+          {children}
         </div>
       </div>
     </SidebarInstanceContext>
+  );
+}
+
+function AntigravitySidebarToggleIcon({
+  isOpen = true,
+  className,
+}: {
+  isOpen?: boolean;
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("size-4 shrink-0", className)}
+      aria-hidden="true"
+    >
+      <rect
+        x="2"
+        y="2.5"
+        width="12"
+        height="11"
+        rx="2.5"
+        stroke="currentColor"
+        strokeWidth="1.25"
+      />
+      <line x1="6" y1="2.5" x2="6" y2="13.5" stroke="currentColor" strokeWidth="1.25" />
+      {isOpen ? (
+        <path
+          d="M 4.5 3.125 L 5.375 3.125 L 5.375 12.875 L 4.5 12.875 C 3.2 12.875 2.625 12.3 2.625 11 L 2.625 5 C 2.625 3.7 3.2 3.125 4.5 3.125 Z"
+          fill="currentColor"
+        />
+      ) : null}
+    </svg>
   );
 }
 
@@ -397,7 +410,7 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
   return (
     <Button
       className={cn(
-        "size-[var(--workspace-titlebar-control-size)]! [-webkit-app-region:no-drag]",
+        "size-[var(--workspace-titlebar-control-size)]! [-webkit-app-region:no-drag] cursor-pointer pointer-events-auto",
         className,
       )}
       data-sidebar="trigger"
@@ -411,7 +424,7 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       variant="ghost"
       {...props}
     >
-      <MorphIcon className="size-4" icon={isOpen ? PanelLeftClose : PanelLeft} />
+      <AntigravitySidebarToggleIcon isOpen={isOpen} />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
@@ -606,7 +619,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
       className={cn(
-        "relative flex min-w-0 w-full flex-1 flex-col bg-background surface-grain",
+        "relative flex min-w-0 w-full flex-1 flex-col bg-background surface-grain h-full min-h-0",
         "md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-2 md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm/5",
         className,
       )}
@@ -846,6 +859,7 @@ function SidebarMenuSubButton({
 }
 
 export {
+  AntigravitySidebarToggleIcon,
   SidebarInput,
   Sidebar,
   SidebarContent,

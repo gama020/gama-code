@@ -225,7 +225,9 @@ export function normalizePreviewUrl(rawUrl: string): string {
   if (localFileUrl !== null) {
     return localFileUrl;
   }
-  const useHttp = LOOPBACK_PREFIX_PATTERN.test(trimmed);
+  const hostToken = trimmed.split(/[/?#:]/, 1)[0] ?? "";
+  const isPrivateIp = /^192\.168\.|^10\.|^172\.(?:1[6-9]|2\d|3[01])\./.test(hostToken);
+  const useHttp = LOOPBACK_PREFIX_PATTERN.test(trimmed) || isPrivateIp;
   const candidate = URL_SCHEME_WITH_AUTHORITY_PATTERN.test(trimmed)
     ? trimmed
     : `${useHttp ? "http" : "https"}://${trimmed}`;

@@ -528,6 +528,40 @@ const TOP_STATUS_ICONS = {
 } as const;
 
 function TopStatusIcon(props: { icon: keyof typeof TOP_STATUS_ICONS; className: string }) {
+  if (props.icon === "working") {
+    return (
+      <svg
+        className={cn("size-3 animate-spin text-gama-arc shrink-0", props.className)}
+        viewBox="0 0 16 16"
+        fill="none"
+        aria-hidden
+      >
+        <circle
+          cx="8"
+          cy="8"
+          r="5.5"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeDasharray="20 12"
+        />
+      </svg>
+    );
+  }
+
+  if (props.icon === "input" || props.icon === "approval") {
+    return (
+      <span
+        className={cn(
+          "relative inline-flex size-2 items-center justify-center shrink-0",
+          props.className,
+        )}
+      >
+        <span className="absolute size-3 rounded-full bg-gama-pink/35 animate-ping" />
+        <span className="size-2 rounded-full bg-gama-pink shadow-xs" />
+      </span>
+    );
+  }
+
   const Icon = TOP_STATUS_ICONS[props.icon];
   return <Icon aria-hidden className={cn("shrink-0", props.className)} />;
 }

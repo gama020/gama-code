@@ -580,25 +580,35 @@ export const layerExecutor: Layer.Layer<
 // A running effect blocks later work on its thread and its lease is never reclaimed in-process,
 // so a stop that hangs must give up and fall through to the normal retry/fail path.
 const DELEGATED_TASKS_STOP_TIMEOUT = Duration.seconds(30);
+// A provider handshake that never answers would otherwise hold the thread's lease forever:
+// the run stays "starting" and even a stop cannot run behind it.
+const PROVIDER_TURN_START_TIMEOUT = Duration.minutes(5);
 
 const boundExecution =
   (effect: EffectOutbox.OrchestrationEffectV2) =>
-  (execution: Effect.Effect<void, OrchestrationEffectExecutionError>) =>
-    effect.request.type === "delegated-tasks.stop"
-      ? execution.pipe(
-          Effect.timeoutOrElse({
-            duration: DELEGATED_TASKS_STOP_TIMEOUT,
-            orElse: () =>
-              Effect.fail(
-                new OrchestrationEffectExecutionError({
-                  effectId: effect.id,
-                  effectType: effect.request.type,
-                  cause: `Timed out after ${Duration.format(DELEGATED_TASKS_STOP_TIMEOUT)}.`,
-                }),
-              ),
-          }),
-        )
-      : execution;
+  (execution: Effect.Effect<void, OrchestrationEffectExecutionError>) => {
+    const timeout =
+      effect.request.type === "delegated-tasks.stop"
+        ? DELEGATED_TASKS_STOP_TIMEOUT
+        : effect.request.type === "provider-turn.start" ||
+            effect.request.type === "provider-turn.restart"
+          ? PROVIDER_TURN_START_TIMEOUT
+          : null;
+    if (timeout === null) return execution;
+    return execution.pipe(
+      Effect.timeoutOrElse({
+        duration: timeout,
+        orElse: () =>
+          Effect.fail(
+            new OrchestrationEffectExecutionError({
+              effectId: effect.id,
+              effectType: effect.request.type,
+              cause: `Timed out after ${Duration.format(timeout)}.`,
+            }),
+          ),
+      }),
+    );
+  };
 
 export class OrchestrationEffectWorkerError extends Schema.TaggedError<OrchestrationEffectWorkerError>()(
   "OrchestrationEffectWorkerError",
