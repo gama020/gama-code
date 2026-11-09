@@ -57,8 +57,8 @@ import * as ProjectionStore from "./ProjectionStore.ts";
 const DEFAULT_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const DEFAULT_MAX_IDLE_PIN_MS = 4 * 60 * 60 * 1000;
 const RELEASE_SCOPE_CLOSE_TIMEOUT_MS = 30 * 1000;
-/** Past adapters' own 10 s stop fallbacks, so they settle first when the provider answers at all. */
-export const PROVIDER_INTERRUPT_TIMEOUT_MS = 15 * 1000;
+/** Past ACP's own 15 s cancel fallback, so a clean stop settles before this kill. */
+export const PROVIDER_INTERRUPT_TIMEOUT_MS = 25 * 1000;
 
 const busyTurnPrefix = (providerThreadId: ProviderThreadId) => `${providerThreadId}#`;
 const busyTurnKey = (providerThreadId: ProviderThreadId, runOrdinal: number) =>
