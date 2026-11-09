@@ -4,6 +4,7 @@
 import * as NodeFSP from "node:fs/promises";
 import * as NodeCrypto from "node:crypto";
 import * as NodeModule from "node:module";
+import * as NodeURL from "node:url";
 // plist is CommonJS; Node cannot load its named exports from an ES module.
 import Plist from "plist";
 
@@ -1762,6 +1763,25 @@ export const resolveBuildOptions = Effect.fn("resolveBuildOptions")(function* (
   } satisfies ResolvedBuildOptions;
 });
 
+// `node scripts/build-desktop-artifact.ts` skips pnpm's PATH setup, so a bare
+// `vp` spawn ENOENTs on Windows. Resolve this install's binary by absolute path;
+// fixture roots passed as repoRoot have no node_modules.
+const WORKSPACE_BIN_DIR = NodeURL.fileURLToPath(new URL("../node_modules/.bin/", import.meta.url));
+
+const resolveWorkspaceBinCommand = Effect.fn("resolveWorkspaceBinCommand")(function* (
+  binName: string,
+  args: ReadonlyArray<string>,
+  options: {
+    readonly env?: NodeJS.ProcessEnv;
+    readonly extendEnv?: boolean;
+  } = {},
+) {
+  const path = yield* Path.Path;
+  const platform = yield* HostProcess.Platform;
+  const executable = platform === "win32" ? `${binName}.cmd` : binName;
+  return yield* resolveSpawnCommand(path.join(WORKSPACE_BIN_DIR, executable), args, options);
+});
+
 const runCommand = Effect.fn("runCommand")(function* (
   command: ChildProcess.Command,
   options: {
@@ -1838,7 +1858,7 @@ const buildDesktopBundlesUnlocked = Effect.fn("buildDesktopBundlesUnlocked")(fun
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const spawnCommand = yield* resolveSpawnCommand("vp", ["run", "build:desktop"]);
+  const spawnCommand = yield* resolveWorkspaceBinCommand("vp", ["run", "build:desktop"]);
   yield* Effect.acquireUseRelease(
     Effect.forEach(releasePackageFiles, (relativePath) =>
       Effect.gen(function* () {
@@ -3140,7 +3160,7 @@ export const stageWindowsServerSidecar = Effect.fn("stageWindowsServerSidecar")(
   }
 
   yield* Effect.log("[desktop-artifact] Installing server sidecar runtime externals...");
-  const installCommand = yield* resolveSpawnCommand("vp", [...STAGE_INSTALL_ARGS]);
+  const installCommand = yield* resolveWorkspaceBinCommand("vp", [...STAGE_INSTALL_ARGS]);
   yield* runCommand(
     ChildProcess.make(installCommand.command, installCommand.args, {
       cwd: serverStageDir,
@@ -3919,7 +3939,7 @@ const buildDesktopArtifactUnlocked = Effect.fn("buildDesktopArtifactUnlocked")(f
   }
 
   yield* Effect.log("[desktop-artifact] Installing staged production dependencies...");
-  const installCommand = yield* resolveSpawnCommand("vp", [...STAGE_INSTALL_ARGS]);
+  const installCommand = yield* resolveWorkspaceBinCommand("vp", [...STAGE_INSTALL_ARGS]);
   yield* runCommand(
     ChildProcess.make(installCommand.command, installCommand.args, {
       cwd: stageAppDir,
@@ -4028,7 +4048,9 @@ const buildDesktopArtifactUnlocked = Effect.fn("buildDesktopArtifactUnlocked")(f
     "--publish",
     "never",
   ];
-  const builderCommand = yield* resolveSpawnCommand("vp", builderArgs, { env: buildEnv });
+  const builderCommand = yield* resolveWorkspaceBinCommand("vp", builderArgs, {
+    env: buildEnv,
+  });
   yield* runCommand(
     ChildProcess.make(builderCommand.command, builderCommand.args, {
       cwd: repoRoot,
