@@ -1,0 +1,55 @@
+name: Windows Installer Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: Windows architecture
+        required: true
+        default: x64
+        type: choice
+        options:
+          - x64
+          - arm64
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    name: Build Windows NSIS Installer (${{ inputs.arch }})
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ inputs.arch == 'arm64' && 'aarch64-pc-windows-msvc' || 'x86_64-pc-windows-msvc' }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.14.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web, server, and desktop bundles
+        run: pnpm run build:desktop
+
+      - name: Build Windows NSIS Installer
+        run: node scripts/build-desktop-artifact.ts --platform win --target nsis --arch ${{ inputs.arch }} --skip-build
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer-${{ inputs.arch }}
+          path: release/*.*
+          if-no-files-found: error
