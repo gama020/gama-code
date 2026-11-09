@@ -705,7 +705,7 @@ const ConversationTimeline = memo(function ConversationTimeline({
     revealedMessageId,
   });
   const rows = useStableRows(rawRows, listIdentityKey);
-  const activeLiveRow = rows.find((row) => row.kind === "work-live" && row.active);
+  const activeLiveRow = rows.find((row) => row.kind === "work-live");
   const activeLiveGroupId =
     activeLiveRow && "groupId" in activeLiveRow ? activeLiveRow.groupId : null;
   if (activeLiveGroupId !== null && activeLiveGroupId !== autoExpandedLiveGroupId) {
