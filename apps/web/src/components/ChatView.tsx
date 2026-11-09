@@ -1310,6 +1310,11 @@ export default function ChatView(props: ChatViewProps) {
     lockedInstanceId: activeRuntime?.providerInstanceId ?? activeThreadModelInstanceId,
   });
   const selectedProvider = selectedProviderEntry?.driverKind ?? requestedDriverKind;
+  const activeProviderEntry =
+    providerInstanceEntries.find(
+      (entry) => entry.instanceId === activeRuntime?.providerInstanceId,
+    ) ?? selectedProviderEntry;
+  const activeProviderLabel = activeProviderEntry?.displayName ?? null;
   const activeProviderInstanceId = selectedProviderEntry?.instanceId ?? null;
   const activeProviderStatus = selectedProviderEntry?.snapshot ?? null;
   const { enabled: interactionModeEnabled, interactionMode } = resolveComposerInteractionMode({
@@ -3461,6 +3466,7 @@ export default function ChatView(props: ChatViewProps) {
                   listRef={legendListRef}
                   runs={serverProjection?.runs ?? []}
                   latestRun={activeActivityRun}
+                  activeProviderLabel={activeProviderLabel}
                   announcedRun={announcedRun(activeActivityRun, serverProjection?.runs ?? [])}
                   detailBehindShell={isDetailBehindShell(
                     activeLatestRun,

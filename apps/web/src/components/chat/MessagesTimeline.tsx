@@ -244,6 +244,8 @@ interface MessagesTimelineProps {
   listRef: React.RefObject<LegendListRef | null>;
   timelineEntries: ReadonlyArray<TimelineEntry>;
   latestRun: TimelineLatestRun | null;
+  /** Human provider name for the run, shown beside "Working for …". */
+  activeProviderLabel?: string | null;
   /** The run the screen reader announcer follows; see announcedRun. */
   announcedRun?: { readonly runId: RunId; readonly status: TimelineLatestRun["status"] } | null;
   /** See isDetailBehindShell. */
@@ -360,6 +362,7 @@ const ConversationTimeline = memo(function ConversationTimeline({
   activeFindMatch = null,
   findNavigationId = 0,
   latestRun,
+  activeProviderLabel = null,
   announcedRun = null,
   detailBehindShell = false,
   runningRunId = null,
@@ -420,6 +423,9 @@ const ConversationTimeline = memo(function ConversationTimeline({
   const [expandedWorkGroupIds, setExpandedWorkGroupIds] = useState<ReadonlySet<string>>(
     () => listState.rememberedPosition?.disclosures?.workGroups ?? new Set(),
   );
+  // Auto-open each live work group once; a manual collapse sticks until the
+  // next group starts.
+  const [autoExpandedLiveGroupId, setAutoExpandedLiveGroupId] = useState<string | null>(null);
   const [expandedAttemptIds, setExpandedAttemptIds] = useState<ReadonlySet<RunAttemptId>>(
     () => listState.rememberedPosition?.disclosures?.attempts ?? new Set(),
   );
@@ -564,13 +570,19 @@ const ConversationTimeline = memo(function ConversationTimeline({
           setExpandedRunIds((existing) => new Set(existing).add(latestRun.runId));
         }
       } else {
+        // The newest turn opens in full so its work log is readable without a
+        // click; the previous turn folds away as before.
         setExpandedRunIds((existing) => {
-          if (!existing.has(previousRunId)) return existing;
           const next = new Set(existing);
           next.delete(previousRunId);
+          next.add(latestRun.runId);
           return next;
         });
       }
+    } else if (latestRun && observedLatestRun.identity !== listIdentityKey) {
+      setExpandedRunIds((existing) =>
+        existing.has(latestRun.runId) ? existing : new Set(existing).add(latestRun.runId),
+      );
     }
   }
 
@@ -693,6 +705,15 @@ const ConversationTimeline = memo(function ConversationTimeline({
     revealedMessageId,
   });
   const rows = useStableRows(rawRows, listIdentityKey);
+  const activeLiveRow = rows.find((row) => row.kind === "work-live" && row.active);
+  const activeLiveGroupId =
+    activeLiveRow && "groupId" in activeLiveRow ? activeLiveRow.groupId : null;
+  if (activeLiveGroupId !== null && activeLiveGroupId !== autoExpandedLiveGroupId) {
+    setAutoExpandedLiveGroupId(activeLiveGroupId);
+    setExpandedWorkGroupIds((existing) =>
+      existing.has(activeLiveGroupId) ? existing : new Set(existing).add(activeLiveGroupId),
+    );
+  }
   const matchedApprovalRequestIds = new Set<string>();
   for (const row of pendingApprovalRequestIds.size > 0 ? rows : []) {
     const entries =
@@ -1084,6 +1105,7 @@ const ConversationTimeline = memo(function ConversationTimeline({
     awaitingUser: awaitingUser !== null,
     isPreparingWorktree,
     latestRunId: latestRun?.runId ?? null,
+    providerLabel: activeProviderLabel,
     liveAnswerPreview:
       isWorking && toolCallVisibility === "zen" ? liveAnswerPreview(timelineEntries) : null,
   };
