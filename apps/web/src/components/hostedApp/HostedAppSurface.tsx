@@ -251,7 +251,7 @@ function useHostedAppSidebar(activeSurfaceId: string | undefined) {
  * grace period the webview is destroyed; the partition keeps cookies and storage, so the next visit
  * only pays for a reload.
  */
-const HOSTED_APP_SUSPEND_DELAY_MS = 5 * 60 * 1000;
+const HOSTED_APP_SUSPEND_DELAY_MS = 15 * 60 * 1000;
 
 function useHostedAppSuspension(
   activeSurfaceId: string | undefined,
