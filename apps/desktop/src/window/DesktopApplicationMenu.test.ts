@@ -18,6 +18,13 @@ import * as ElectronDialog from "../electron/ElectronDialog.ts";
 import * as ElectronMenu from "../electron/ElectronMenu.ts";
 import * as DesktopApplicationMenu from "./DesktopApplicationMenu.ts";
 import * as DesktopConfig from "../app/DesktopConfig.ts";
+
+/** The app menu ships localized (Gama Os renders PT-BR), so tests accept either label. */
+const findMenuItem = (
+  items: readonly Electron.MenuItemConstructorOptions[],
+  english: string,
+  portuguese: string,
+) => items.find((item) => item.label === english || item.label === portuguese);
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
 import * as DesktopUpdates from "../updates/DesktopUpdates.ts";
 import { createInitialDesktopUpdateState } from "../updates/updateMachine.ts";
@@ -178,7 +185,11 @@ const checkForUpdatesFromMacMenu = (state: Partial<DesktopUpdateState>) =>
     if (!Array.isArray(appMenu?.submenu)) {
       throw new Error("Expected the macOS app menu submenu to be an array.");
     }
-    const checkForUpdates = appMenu.submenu.find((item) => item.label === "Check for Updates...");
+    const checkForUpdates = findMenuItem(
+      appMenu.submenu,
+      "Check for Updates...",
+      "Verificar atualizações...",
+    );
     if (typeof checkForUpdates?.click !== "function") {
       throw new Error("Expected Check for Updates... menu item to have a click handler.");
     }
@@ -206,11 +217,15 @@ describe("DesktopApplicationMenu", () => {
       yield* configureMenu(selectedAction, applicationMenuTemplate);
 
       const template = yield* Deferred.await(applicationMenuTemplate);
-      const editMenu = template.find((item) => item.label === "Edit");
+      const editMenu = findMenuItem(template, "Edit", "Editar");
       if (!Array.isArray(editMenu?.submenu)) {
         throw new Error("Expected Edit menu submenu to be an array.");
       }
-      const pasteAsTextItem = editMenu.submenu.find((item) => item.label === "Paste as Text");
+      const pasteAsTextItem = findMenuItem(
+        editMenu.submenu,
+        "Paste as Text",
+        "Colar como texto simples",
+      );
       if (typeof pasteAsTextItem?.click !== "function") {
         throw new Error("Expected Paste as Text menu item to have a click handler.");
       }
@@ -235,7 +250,7 @@ describe("DesktopApplicationMenu", () => {
       yield* configureMenu(selectedAction, applicationMenuTemplate, { platform: "darwin" });
 
       const template = yield* Deferred.await(applicationMenuTemplate);
-      const viewMenu = template.find((item) => item.label === "View");
+      const viewMenu = findMenuItem(template, "View", "Visualizar");
       assert.isDefined(viewMenu);
       if (!Array.isArray(viewMenu.submenu)) {
         throw new Error("Expected View menu submenu to be an array.");
@@ -333,11 +348,11 @@ describe("DesktopApplicationMenu", () => {
       yield* configureMenu(selectedAction, applicationMenuTemplate);
 
       const template = yield* Deferred.await(applicationMenuTemplate);
-      const viewMenu = template.find((item) => item.label === "View");
+      const viewMenu = findMenuItem(template, "View", "Visualizar");
       if (!Array.isArray(viewMenu?.submenu)) {
         throw new Error("Expected View menu submenu to be an array.");
       }
-      const reload = viewMenu.submenu.find((item) => item.label === "Reload");
+      const reload = findMenuItem(viewMenu.submenu, "Reload", "Recarregar");
       assert.equal(reload?.accelerator, "CmdOrCtrl+R");
       if (typeof reload?.click !== "function") {
         throw new Error("Expected Reload menu item to have a click handler.");
