@@ -7,6 +7,7 @@ import {
 import { useLocation } from "@tanstack/react-router";
 import { ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { useSidebar, useSidebarVisibility } from "~/components/ui/sidebar";
 import { isElectron } from "~/env";
@@ -245,6 +246,55 @@ function useHostedAppSidebar(activeSurfaceId: string | undefined) {
  * Mounted once by the app shell. Opening another thread hides a surface instead of unmounting it,
  * so a guest keeps its connection, session and open conversation alive.
  */
+/**
+ * A hidden guest keeps painting and keeps its network timers alive, which costs real CPU. After the
+ * grace period the webview is destroyed; the partition keeps cookies and storage, so the next visit
+ * only pays for a reload.
+ */
+const HOSTED_APP_SUSPEND_DELAY_MS = 5 * 60 * 1000;
+
+function useHostedAppSuspension(
+  activeSurfaceId: string | undefined,
+  mountedSurfaceIds: readonly string[],
+  setMountedSurfaceIds: Dispatch<SetStateAction<readonly string[]>>,
+) {
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+
+  // Keeps a timer in step with the surface the user is looking at, so an abandoned guest stops
+  // burning CPU once the grace period expires. The partition keeps its cookies either way.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- the grace timer tears down a guest after it is abandoned
+  useEffect(() => {
+    if (!isElectron) return;
+    for (const surfaceId of mountedSurfaceIds) {
+      if (surfaceId === activeSurfaceId) {
+        const pending = timers.current.get(surfaceId);
+        if (pending !== undefined) {
+          clearTimeout(pending);
+          timers.current.delete(surfaceId);
+        }
+        continue;
+      }
+      if (timers.current.has(surfaceId)) continue;
+      timers.current.set(
+        surfaceId,
+        setTimeout(() => {
+          timers.current.delete(surfaceId);
+          setMountedSurfaceIds((ids) => ids.filter((id) => id !== surfaceId));
+        }, HOSTED_APP_SUSPEND_DELAY_MS),
+      );
+    }
+  }, [activeSurfaceId, mountedSurfaceIds, setMountedSurfaceIds]);
+
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- keeps the pending grace timers in step with this hook's lifetime
+  useEffect(
+    () => () => {
+      for (const pending of timers.current.values()) clearTimeout(pending);
+      timers.current.clear();
+    },
+    [],
+  );
+}
+
 export function HostedAppStack() {
   const activeSurfaceId = useLocation({
     select: (location) => hostedAppSurfaceIdFromPathname(location.pathname),
@@ -257,6 +307,7 @@ export function HostedAppStack() {
     setMountedSurfaceIds([...mountedSurfaceIds, activeSurfaceId]);
   }
   useHostedAppSidebar(activeSurfaceId);
+  useHostedAppSuspension(activeSurfaceId, mountedSurfaceIds, setMountedSurfaceIds);
 
   if (!isElectron) return null;
   return mountedSurfaceIds.map((surfaceId) => {
