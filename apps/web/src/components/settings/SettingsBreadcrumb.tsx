@@ -1,3 +1,5 @@
+import { msg, useMessages } from "gt-react";
+
 import {
   WorkspaceBreadcrumb,
   WorkspaceBreadcrumbItem,
@@ -5,10 +7,12 @@ import {
 } from "../WorkspaceBreadcrumb";
 import { SETTINGS_SECTION_LABELS } from "./settingsSearch";
 
+const SETTINGS_LABEL = msg("Configurações");
+
 const SETTINGS_BREADCRUMB_LABELS: Readonly<Record<string, string>> = {
   ...SETTINGS_SECTION_LABELS,
-  "/settings/diagnostics": "Diagnósticos",
-  "/settings/open-source-licenses": "Licenças de código aberto",
+  "/settings/diagnostics": msg("Diagnósticos"),
+  "/settings/open-source-licenses": msg("Licenças de código aberto"),
 };
 
 function settingsBreadcrumbLabel(pathname: string): string | null {
@@ -17,18 +21,19 @@ function settingsBreadcrumbLabel(pathname: string): string | null {
 }
 
 export function SettingsBreadcrumb({ pathname }: { pathname: string }) {
+  const m = useMessages();
   const sectionLabel = settingsBreadcrumbLabel(pathname);
 
   return (
     <WorkspaceBreadcrumb ariaLabel="Breadcrumb de configurações">
       {sectionLabel ? (
         <>
-          <WorkspaceBreadcrumbItem>Configurações</WorkspaceBreadcrumbItem>
+          <WorkspaceBreadcrumbItem>{m(SETTINGS_LABEL)}</WorkspaceBreadcrumbItem>
           <WorkspaceBreadcrumbSeparator />
         </>
       ) : null}
       <WorkspaceBreadcrumbItem current className="truncate">
-        {sectionLabel ?? "Configurações"}
+        {m(sectionLabel ?? SETTINGS_LABEL)}
       </WorkspaceBreadcrumbItem>
     </WorkspaceBreadcrumb>
   );

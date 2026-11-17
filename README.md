@@ -52,7 +52,7 @@ Baixe o pacote desejado em [Releases](https://github.com/gama020/gama-code/relea
 
 ## 🛠️ Comandos da CLI (`gama`, `gamaos`, `t3`)
 
-O Gama Os inclui uma CLI avançada no terminal:
+O Gama Os inclui uma CLI avançada no terminal. O binário `t3` continua disponível como alias, e rodar qualquer um deles sobe o servidor e abre a interface web.
 
 ```bash
 # Iniciar o servidor local e abrir a interface web
@@ -67,6 +67,12 @@ gama pair
 # Executar diagnóstico de dependências e agentes instalados
 gama doctor
 ```
+
+### Conecte um agente
+
+O Gama Os precisa de pelo menos um agente instalado e autenticado na máquina. Por exemplo, instale o [Claude Code](https://claude.com/product/claude-code) e rode `claude auth login`, ou instale o [Codex CLI](https://developers.openai.com/codex/cli) e rode `codex login`.
+
+O passo a passo de cada provedor está em [Configuração de provedores](./docs/user/install.md#providers). Builds noturnos (nightly), AppImage, WSL e NixOS estão em [Instalação](./docs/user/install.md).
 
 ---
 

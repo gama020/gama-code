@@ -1,9 +1,11 @@
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/models";
 import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environment";
+import type { ContextMenuSource } from "@t3tools/contracts";
 import { ChevronDownIcon, FolderIcon, FolderOpenIcon, PlusIcon } from "lucide-react";
 import { memo } from "react";
 
 import { cn } from "~/lib/utils";
+import { contextMenuSourceOf } from "../../contextMenuSource";
 import type { SidebarProjectSnapshot } from "../../sidebarProjectGrouping";
 import { useUiStateStore } from "../../uiStateStore";
 import { resolveSidebarFolderDot, resolveThreadLastVisitedAt } from "../Sidebar.logic";
@@ -43,7 +45,11 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
   totalThreadsCount?: number;
   onToggle: (group: SidebarProjectSnapshot) => void;
   onNewThread: (group: SidebarProjectSnapshot) => void;
-  onContextMenu: (group: SidebarProjectSnapshot, position: { x: number; y: number }) => void;
+  onContextMenu: (
+    group: SidebarProjectSnapshot,
+    position: { x: number; y: number },
+    source: ContextMenuSource,
+  ) => void;
 }) {
   const { group, collapsed, hiddenThreads, totalThreadsCount } = props;
   const rowId = sidebarFolderRowId(group.projectKey);
@@ -81,7 +87,11 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
         onClick={() => props.onToggle(group)}
         onContextMenu={(event) => {
           event.preventDefault();
-          props.onContextMenu(group, { x: event.clientX, y: event.clientY });
+          props.onContextMenu(
+            group,
+            { x: event.clientX, y: event.clientY },
+            contextMenuSourceOf(event),
+          );
         }}
         className="flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-1 focus-visible:ring-gama-accent/50 focus-visible:ring-inset"
       >
@@ -122,7 +132,7 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
           </span>
         ) : null}
         {totalCount > 0 ? (
-          <span className="shrink-0 px-1.5 py-0.5 rounded-full text-3xs font-medium tabular-nums text-muted-foreground bg-muted/40 border border-border/40 group-hover/project-folder:opacity-0 pointer-coarse:opacity-0 transition-opacity">
+          <span className="shrink-0 px-1.5 py-0.5 rounded-full text-3xs font-medium tabular-nums text-muted-foreground bg-muted/40 border border-border/40 group-hover/project-folder:opacity-0 group-has-[[data-sidebar-action-for]:focus]/project-folder:invisible pointer-coarse:opacity-0 transition-opacity">
             {totalCount}
           </span>
         ) : null}

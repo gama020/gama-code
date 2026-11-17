@@ -24,6 +24,7 @@ import * as Fiber from "effect/Fiber";
 import * as Logger from "effect/Logger";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 
 import * as MobileDatabase from "../persistence/mobile-database";
 import { make } from "./environment-cache-store";
@@ -529,11 +530,20 @@ describe("mobile SQLite environment cache store", () => {
         Effect.provideService(MobileDatabase.MobileDatabase, memory.database),
       );
 
-      yield* store.saveShell(ENVIRONMENT_ID, SHELL_SNAPSHOT);
+      const origin = {
+        serverVersion: "1.0.0",
+        databaseMigration: 70,
+        omitIdleSubagents: true,
+        omitOlderSettled: false,
+        snapshotAt: 1_800_000_000_000,
+      };
+      yield* store.saveShell(ENVIRONMENT_ID, SHELL_SNAPSHOT, origin);
       yield* store.saveThread(ENVIRONMENT_ID, THREAD_SNAPSHOT);
 
       const shell = Option.getOrThrow(yield* store.loadShell(ENVIRONMENT_ID));
       const thread = Option.getOrThrow(yield* store.loadThread(ENVIRONMENT_ID, THREAD_ID));
+
+      expect(shell.origin).toEqual(origin);
 
       expect(DateTime.formatIso(shell.threads[0]!.updatedAt)).toBe("2026-07-29T12:00:00.000Z");
       expect(DateTime.formatIso(shell.threads[0]!.latestUserMessageAt!)).toBe(
@@ -558,7 +568,7 @@ describe("mobile SQLite environment cache store", () => {
     }),
   );
 
-  it.live("returns cached threads before their pull request links, which load after", () =>
+  it.effect("returns cached threads before their pull request links, which load after", () =>
     Effect.gen(function* () {
       const memory = makeDatabase();
       const store = yield* make().pipe(
@@ -583,12 +593,13 @@ describe("mobile SQLite environment cache store", () => {
 
       const shell = Option.getOrThrow(yield* store.loadShell(ENVIRONMENT_ID));
       expect(shell.threads.map((thread) => thread.pullRequests)).toEqual([undefined, undefined]);
-      const links = yield* shell.loadPullRequests!;
-      expect([...links]).toEqual([[THREAD_ID, [link]]]);
+      const links = yield* Effect.forkChild(shell.loadPullRequests!);
+      yield* TestClock.adjust("1 millis");
+      expect([...(yield* Fiber.join(links))]).toEqual([[THREAD_ID, [link]]]);
     }),
   );
 
-  it.live("keeps cached threads when their pull request links cannot be read", () => {
+  it.effect("keeps cached threads when their pull request links cannot be read", () => {
     const messages: Array<unknown> = [];
     const logger = Logger.make(({ message }) => {
       messages.push(message);
@@ -624,7 +635,9 @@ describe("mobile SQLite environment cache store", () => {
 
       const shell = Option.getOrThrow(yield* store.loadShell(ENVIRONMENT_ID));
       expect(shell.threads.map((thread) => thread.id)).toEqual([THREAD_ID, readable.id]);
-      expect([...(yield* shell.loadPullRequests!)]).toEqual([[readable.id, [link]]]);
+      const links = yield* Effect.forkChild(shell.loadPullRequests!);
+      yield* TestClock.adjust("1 millis");
+      expect([...(yield* Fiber.join(links))]).toEqual([[readable.id, [link]]]);
       expect(messages).toHaveLength(1);
       expect(memory.removed).toEqual([]);
     }).pipe(Effect.provide(Logger.layer([logger], { mergeWithExisting: false })));
