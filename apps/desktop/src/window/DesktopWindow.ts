@@ -10,7 +10,16 @@ import * as Semaphore from "effect/Semaphore";
 
 import * as Electron from "electron";
 
-import { type DesktopSnapShotEvent, DEFAULT_CLIENT_SETTINGS } from "@t3tools/contracts";
+import {
+  type DesktopSnapShotEvent,
+  DEFAULT_CLIENT_SETTINGS,
+  type HostedAppSurface,
+  hostedAppSurfaceForPartition,
+  hostedAppSurfacePartition,
+  HOSTED_APP_SURFACES,
+  isAppSurfacePartition,
+  isHostedAppSurfaceUrl,
+} from "@t3tools/contracts";
 
 import * as DesktopAssets from "../app/DesktopAssets.ts";
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
@@ -38,8 +47,18 @@ import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as DesktopRendererHistory from "../telemetry/DesktopRendererHistory.ts";
 import { makeQuitShortcutHandler } from "./QuitHold.ts";
 import { copyContextMenuImage } from "./ContextMenuImage.ts";
+import { prepareHostedAppSession } from "./HostedAppSession.ts";
 
 const TITLEBAR_HEIGHT = 42;
+
+/** Partitions this window hosts as an app; a guest is matched back to one by its session. */
+function hostedAppSurfaceForGuest(contents: Electron.WebContents): HostedAppSurface | undefined {
+  // Electron does not expose a guest's partition name, but the session object is that identity.
+  const partition = HOSTED_APP_SURFACES.map((surface) =>
+    hostedAppSurfacePartition(surface.id),
+  ).find((candidate) => contents.session === Electron.session.fromPartition(candidate));
+  return partition === undefined ? undefined : hostedAppSurfaceForPartition(partition);
+}
 
 class ContextMenuImageCopyError extends Schema.TaggedError<ContextMenuImageCopyError>()(
   "ContextMenuImageCopyError",
@@ -523,18 +542,28 @@ export const make = Effect.gen(function* () {
       return Option.none();
     }
     window.webContents.on("will-attach-webview", (event, webPreferences, params) => {
-      if (
-        typeof params.partition !== "string" ||
-        !previewManager.isBrowserPartition(params.partition)
-      ) {
+      const partition = typeof params.partition === "string" ? params.partition : null;
+      const appSurface = partition !== null && isAppSurfacePartition(partition);
+      if (partition === null || (!appSurface && !previewManager.isBrowserPartition(partition))) {
         event.preventDefault();
         return;
       }
-      webPreferences.sandbox = false;
       webPreferences.nodeIntegration = false;
       webPreferences.nodeIntegrationInSubFrames = false;
-      webPreferences.contextIsolation = false;
       webPreferences.disableHtmlFullscreenWindowResize = true;
+      if (appSurface) {
+        // A signed-in app keeps the browser's normal origin rules. Preview relaxations null the
+        // Origin header, and servers that validate it then reject every write with a 403.
+        webPreferences.sandbox = true;
+        webPreferences.contextIsolation = true;
+        const preferences = webPreferences as Record<string, unknown>;
+        delete preferences.allowFileAccessFromFileURLs;
+        preferences.webSecurity = true;
+        prepareHostedAppSession(Electron.session.fromPartition(partition));
+        return;
+      }
+      webPreferences.sandbox = false;
+      webPreferences.contextIsolation = false;
       (webPreferences as Record<string, unknown>).allowFileAccessFromFileURLs = true;
       (webPreferences as Record<string, unknown>).webSecurity = false;
       if (previewPasskeys.bridgeEnabled) {
@@ -624,6 +653,24 @@ export const make = Effect.gen(function* () {
     installContextMenu(window, window.webContents);
     window.webContents.on("did-attach-webview", (_event, contents) => {
       installContextMenu(window, contents);
+      const surface = hostedAppSurfaceForGuest(contents);
+      if (surface) {
+        // An app guest never becomes a browser tab: no CDP relay, no history, no annotations.
+        contents.setWindowOpenHandler(({ url }) => {
+          if (Option.isSome(ElectronShell.parseSafeExternalUrl(url))) {
+            void runPromise(electronShell.openExternal(url));
+          }
+          return { action: "deny" };
+        });
+        contents.on("will-navigate", (event, url) => {
+          if (isHostedAppSurfaceUrl(surface, url)) return;
+          event.preventDefault();
+          if (Option.isSome(ElectronShell.parseSafeExternalUrl(url))) {
+            void runPromise(electronShell.openExternal(url));
+          }
+        });
+        return;
+      }
       void runPromise(previewManager.prepareWebview(contents));
     });
 

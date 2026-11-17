@@ -6,10 +6,12 @@ import {
   PlusIcon,
   SettingsIcon,
 } from "lucide-react";
+import { HOSTED_APP_SURFACES, hostedAppSurfaceIdFromPathname } from "@t3tools/contracts";
 import { isThreadWorking } from "@t3tools/client-runtime/state/thread-inbox";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 import { readPullRequestListPreferences } from "../pullRequest/pullRequestListPreferences";
 import { cn } from "../../lib/utils";
+import { hostedAppSurfaceIcon } from "../hostedApp/surfaceIcons";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { useSidebar } from "../ui/sidebar";
 import { useThreadShells, useProjects } from "../../state/entities";
@@ -52,6 +54,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
   };
 
   const isHomeActive = pathname === "/" || pathname.startsWith("/_chat");
+  const activeSurfaceId = hostedAppSurfaceIdFromPathname(pathname);
   const isPrActive = pathname.startsWith("/pull-requests");
   const isUsageActive = pathname.startsWith("/usage");
   const isSettingsActive = pathname.startsWith("/settings");
@@ -127,6 +130,41 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
           />
           <TooltipPopup side="right">Conversas e Projetos</TooltipPopup>
         </Tooltip>
+
+        {/* Hosted apps: each one is a full app in the rail, not a browser tab. */}
+        {HOSTED_APP_SURFACES.map((surface) => {
+          const Icon = hostedAppSurfaceIcon(surface.id);
+          const isActive = activeSurfaceId === surface.id;
+          return (
+            <Tooltip key={surface.id}>
+              <TooltipTrigger
+                render={
+                  <button
+                    type="button"
+                    data-active={isActive}
+                    aria-label={surface.title}
+                    onClick={() => {
+                      // A hosted app takes the full width; the shell collapses the sidebar for it.
+                      void navigate({
+                        to: "/apps/$surfaceId",
+                        params: { surfaceId: surface.id },
+                      });
+                    }}
+                    onMouseLeave={onLeaveModule}
+                    className={cn(
+                      "relative grid size-9.5 place-items-center rounded-xl transition-all duration-150 cursor-pointer",
+                      "text-gama-muted hover:bg-white/5 hover:text-gama-hover",
+                      isActive && "bg-white/10 text-white font-medium shadow-xs",
+                    )}
+                  >
+                    <Icon className={cn("size-4.5", isActive && "text-gama-arc")} />
+                  </button>
+                }
+              />
+              <TooltipPopup side="right">{surface.title}</TooltipPopup>
+            </Tooltip>
+          );
+        })}
 
         {/* Pull Requests */}
         {pullRequestsSupported ? (

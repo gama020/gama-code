@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { hostedAppSurface, hostedAppSurfaceIdFromPathname } from "@t3tools/contracts";
 import * as Schema from "effect/Schema";
 import {
   useEffect,
@@ -39,6 +40,7 @@ import {
   usePanelNavigationSuppression,
 } from "../panelAnimations";
 import { BackgroundThreadAnnouncer } from "./BackgroundThreadAnnouncer";
+import { HostedAppStack } from "./hostedApp/HostedAppSurface";
 import { HistorySwipeNavigation } from "./HistorySwipeNavigation";
 import { ActivityRail, type RailModuleId } from "./sidebar/ActivityRail";
 import { RailFlyoutPreview } from "./sidebar/RailFlyoutPreview";
@@ -443,6 +445,9 @@ function AppTopTitlebar({
     viewTitle = "Configurações";
   } else if (location.pathname.startsWith("/pull-requests")) {
     viewTitle = "Pull Requests";
+  } else if (hostedAppSurfaceIdFromPathname(location.pathname)) {
+    const surfaceId = hostedAppSurfaceIdFromPathname(location.pathname);
+    viewTitle = (surfaceId ? hostedAppSurface(surfaceId)?.title : undefined) ?? viewTitle;
   }
 
   return (
@@ -674,8 +679,10 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
             <ThreadSidebar routeReveal={sidebarRouteReveal} />
             <SidebarRail onDoubleClick={resetSidebarWidth} />
           </Sidebar>
-          <div className="flex flex-1 min-h-0 min-w-0 h-full overflow-hidden rounded-2xl border border-black/5 bg-gama-main dark:border-white/10">
+          <div className="relative flex flex-1 min-h-0 min-w-0 h-full overflow-hidden rounded-2xl border border-black/5 bg-gama-main dark:border-white/10">
             {children}
+            {/* Kept mounted across routes so a hosted app never reconnects. */}
+            <HostedAppStack />
           </div>
         </div>
         <BackgroundThreadAnnouncer />

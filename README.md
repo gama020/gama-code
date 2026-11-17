@@ -21,6 +21,7 @@ Este projeto é um fork evoluído do [T3 Code](https://github.com/pingdotgg/t3co
 - **100% em Português do Brasil (PT-BR)**: Sistema completo de internacionalização com suporte a múltiplos idiomas.
 - **Nova Barra Lateral (Sidebar)**: Inspirada no Antigravity e Codex, com agrupamento inteligente por repositórios, branches git, contadores de threads e monitoramento em tempo real de estados do agente (🔵 executando, 🟢 pronto, 🟡 aprovação necessária, 🔴 erro).
 - **Compilação Multiplataforma**: Instaladores nativos para **macOS (.dmg)**, **Windows (.exe NSIS)** e **Linux (.AppImage / .deb)**.
+- **Apps Embutidos**: Superfícies de app no rail de atividades que hospedam o OpenBot (`openbot.run/app`) e o Creative OS (`app.gamacreativedesign.com.br`) no desktop. Cada uma tem partição isolada, sem chrome de navegador, sem CDP e sem histórico — o painel se comporta como um app, não como uma aba. Novas superfícies são registradas em `packages/contracts/src/appSurface.ts`.
 - **Sincronização Upstream Contínua**: Mecanismo de isolamento que permite puxar e incorporar as novidades do repositório oficial com um único comando.
 
 ---

@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as PairRouteImport } from './routes/pair'
+import { Route as OpenbotRouteImport } from './routes/openbot'
 import { Route as GuestRouteImport } from './routes/guest'
 import { Route as ConnectAgentRouteImport } from './routes/connect-agent'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as ChatRouteImport } from './routes/_chat'
 import { Route as ChatIndexRouteImport } from './routes/_chat.index'
 import { Route as ProjectsProjectKeyRouteImport } from './routes/projects.$projectKey'
+import { Route as AppsSurfaceIdRouteImport } from './routes/apps.$surfaceId'
 import { Route as ChatUsageRouteImport } from './routes/_chat.usage'
 import { Route as ChatSettingsRouteImport } from './routes/_chat.settings'
 import { Route as ChatPullRequestsRouteImport } from './routes/_chat.pull-requests'
@@ -62,6 +64,11 @@ const PairRoute = PairRouteImport.update({
   path: '/pair',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OpenbotRoute = OpenbotRouteImport.update({
+  id: '/openbot',
+  path: '/openbot',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuestRoute = GuestRouteImport.update({
   id: '/guest',
   path: '/guest',
@@ -89,6 +96,11 @@ const ChatIndexRoute = ChatIndexRouteImport.update({
 const ProjectsProjectKeyRoute = ProjectsProjectKeyRouteImport.update({
   id: '/projects/$projectKey',
   path: '/projects/$projectKey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppsSurfaceIdRoute = AppsSurfaceIdRouteImport.update({
+  id: '/apps/$surfaceId',
+  path: '/apps/$surfaceId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatUsageRoute = ChatUsageRouteImport.update({
@@ -273,12 +285,14 @@ export interface FileRoutesByFullPath {
   '/connect': typeof ConnectRoute
   '/connect-agent': typeof ConnectAgentRoute
   '/guest': typeof GuestRoute
+  '/openbot': typeof OpenbotRoute
   '/pair': typeof PairRoute
   '/welcome': typeof WelcomeRoute
   '/new': typeof ChatNewRoute
   '/pull-requests': typeof ChatPullRequestsRoute
   '/settings': typeof ChatSettingsRouteWithChildren
   '/usage': typeof ChatUsageRoute
+  '/apps/$surfaceId': typeof AppsSurfaceIdRoute
   '/projects/$projectKey': typeof ProjectsProjectKeyRoute
   '/$environmentId/$threadId': typeof ChatEnvironmentIdThreadIdRoute
   '/draft/$draftId': typeof ChatDraftDraftIdRoute
@@ -315,12 +329,14 @@ export interface FileRoutesByTo {
   '/connect': typeof ConnectRoute
   '/connect-agent': typeof ConnectAgentRoute
   '/guest': typeof GuestRoute
+  '/openbot': typeof OpenbotRoute
   '/pair': typeof PairRoute
   '/welcome': typeof WelcomeRoute
   '/new': typeof ChatNewRoute
   '/pull-requests': typeof ChatPullRequestsRoute
   '/settings': typeof ChatSettingsRouteWithChildren
   '/usage': typeof ChatUsageRoute
+  '/apps/$surfaceId': typeof AppsSurfaceIdRoute
   '/projects/$projectKey': typeof ProjectsProjectKeyRoute
   '/': typeof ChatIndexRoute
   '/$environmentId/$threadId': typeof ChatEnvironmentIdThreadIdRoute
@@ -360,12 +376,14 @@ export interface FileRoutesById {
   '/connect': typeof ConnectRoute
   '/connect-agent': typeof ConnectAgentRoute
   '/guest': typeof GuestRoute
+  '/openbot': typeof OpenbotRoute
   '/pair': typeof PairRoute
   '/welcome': typeof WelcomeRoute
   '/_chat/new': typeof ChatNewRoute
   '/_chat/pull-requests': typeof ChatPullRequestsRoute
   '/_chat/settings': typeof ChatSettingsRouteWithChildren
   '/_chat/usage': typeof ChatUsageRoute
+  '/apps/$surfaceId': typeof AppsSurfaceIdRoute
   '/projects/$projectKey': typeof ProjectsProjectKeyRoute
   '/_chat/': typeof ChatIndexRoute
   '/_chat/$environmentId/$threadId': typeof ChatEnvironmentIdThreadIdRoute
@@ -406,12 +424,14 @@ export interface FileRouteTypes {
     | '/connect'
     | '/connect-agent'
     | '/guest'
+    | '/openbot'
     | '/pair'
     | '/welcome'
     | '/new'
     | '/pull-requests'
     | '/settings'
     | '/usage'
+    | '/apps/$surfaceId'
     | '/projects/$projectKey'
     | '/$environmentId/$threadId'
     | '/draft/$draftId'
@@ -448,12 +468,14 @@ export interface FileRouteTypes {
     | '/connect'
     | '/connect-agent'
     | '/guest'
+    | '/openbot'
     | '/pair'
     | '/welcome'
     | '/new'
     | '/pull-requests'
     | '/settings'
     | '/usage'
+    | '/apps/$surfaceId'
     | '/projects/$projectKey'
     | '/'
     | '/$environmentId/$threadId'
@@ -492,12 +514,14 @@ export interface FileRouteTypes {
     | '/connect'
     | '/connect-agent'
     | '/guest'
+    | '/openbot'
     | '/pair'
     | '/welcome'
     | '/_chat/new'
     | '/_chat/pull-requests'
     | '/_chat/settings'
     | '/_chat/usage'
+    | '/apps/$surfaceId'
     | '/projects/$projectKey'
     | '/_chat/'
     | '/_chat/$environmentId/$threadId'
@@ -537,8 +561,10 @@ export interface RootRouteChildren {
   ConnectRoute: typeof ConnectRoute
   ConnectAgentRoute: typeof ConnectAgentRoute
   GuestRoute: typeof GuestRoute
+  OpenbotRoute: typeof OpenbotRoute
   PairRoute: typeof PairRoute
   WelcomeRoute: typeof WelcomeRoute
+  AppsSurfaceIdRoute: typeof AppsSurfaceIdRoute
   ProjectsProjectKeyRoute: typeof ProjectsProjectKeyRoute
   ThreadsEnvironmentIdThreadIdRoute: typeof ThreadsEnvironmentIdThreadIdRoute
 }
@@ -557,6 +583,13 @@ declare module '@tanstack/react-router' {
       path: '/pair'
       fullPath: '/pair'
       preLoaderRoute: typeof PairRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/openbot': {
+      id: '/openbot'
+      path: '/openbot'
+      fullPath: '/openbot'
+      preLoaderRoute: typeof OpenbotRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guest': {
@@ -599,6 +632,13 @@ declare module '@tanstack/react-router' {
       path: '/projects/$projectKey'
       fullPath: '/projects/$projectKey'
       preLoaderRoute: typeof ProjectsProjectKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/apps/$surfaceId': {
+      id: '/apps/$surfaceId'
+      path: '/apps/$surfaceId'
+      fullPath: '/apps/$surfaceId'
+      preLoaderRoute: typeof AppsSurfaceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_chat/usage': {
@@ -933,8 +973,10 @@ const rootRouteChildren: RootRouteChildren = {
   ConnectRoute: ConnectRoute,
   ConnectAgentRoute: ConnectAgentRoute,
   GuestRoute: GuestRoute,
+  OpenbotRoute: OpenbotRoute,
   PairRoute: PairRoute,
   WelcomeRoute: WelcomeRoute,
+  AppsSurfaceIdRoute: AppsSurfaceIdRoute,
   ProjectsProjectKeyRoute: ProjectsProjectKeyRoute,
   ThreadsEnvironmentIdThreadIdRoute: ThreadsEnvironmentIdThreadIdRoute,
 }
