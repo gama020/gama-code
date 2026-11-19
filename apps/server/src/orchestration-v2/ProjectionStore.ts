@@ -43,6 +43,7 @@ import type {
   OrchestrationV2ThreadShell,
   OrchestrationV2ThreadProjection,
   OrchestrationV2TurnItem,
+  ModelSelection,
   GuestShareId,
   ProviderThreadId,
   ProviderTurnId,
@@ -196,6 +197,13 @@ export type ProjectionLimitRecoveryCandidate = Pick<
   | "limitRecovery"
   | "snoozedUntil"
 >;
+
+/** The failure's account plus the target it would resume on. */
+export type ProjectionLimitRecoveryTarget = ProjectionLimitRecoveryCandidate & {
+  readonly providerInstanceId: ProviderInstanceId;
+  readonly modelSelection: ModelSelection;
+  readonly usageLimitContinuationOfRunId: RunId | null;
+};
 
 export type ProjectionThreadPullRequests = Pick<
   OrchestrationV2AppThread,
@@ -633,7 +641,7 @@ export interface ProjectionStoreV2Shape {
     readonly now: DateTime.Utc;
     readonly autoResume: boolean;
     readonly snooze: boolean;
-  }) => Effect.Effect<ReadonlyArray<ProjectionLimitRecoveryCandidate>, ProjectionStoreV2Error>;
+  }) => Effect.Effect<ReadonlyArray<ProjectionLimitRecoveryTarget>, ProjectionStoreV2Error>;
   /** Epoch ms of the next armed reset or snooze end after `now`, when a waiting thread becomes a candidate. */
   readonly getLimitRecoveryWakeAt: (
     now: DateTime.Utc,
@@ -4686,10 +4694,12 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           readonly payload_json: string;
           readonly run_id: string;
           readonly completed_at: string | null;
+          readonly continuation_run_id: string | null;
           readonly failure_payload_json: string;
           readonly last_error: string | null;
         }>`
           SELECT t.payload_json, r.run_id, r.completed_at,
+            json_extract(r.payload_json, '$.usageLimitContinuationOfRunId') AS continuation_run_id,
             item.payload_json AS failure_payload_json,
             (
               SELECT json_extract(session.payload_json, '$.lastError')
@@ -4777,7 +4787,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             )
           ORDER BY t.thread_id
         `;
-        const candidates: Array<ProjectionLimitRecoveryCandidate> = [];
+        const candidates: Array<ProjectionLimitRecoveryTarget> = [];
         for (const row of rows) {
           const thread = yield* decodeThreadPayload(row.payload_json);
           const item = yield* decodeTurnItemPayload(row.failure_payload_json);
@@ -4800,6 +4810,12 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             pendingRuntimeRequest: null,
             limitRecovery: thread.limitRecovery ?? null,
             snoozedUntil: thread.snoozedUntil ?? null,
+            providerInstanceId: thread.providerInstanceId,
+            modelSelection: thread.modelSelection,
+            usageLimitContinuationOfRunId:
+              typeof row.continuation_run_id === "string"
+                ? RunId.make(row.continuation_run_id)
+                : null,
           });
         }
         return candidates;
