@@ -108,8 +108,8 @@ it("protects the server unit from agents under CPU and memory pressure", () => {
   });
   const service = unit.slice(unit.indexOf("[Service]"), unit.indexOf("[Install]"));
   for (const line of [
-    "CPUWeight=1000",
-    "IOWeight=1000",
+    "CPUWeight=100",
+    "IOWeight=100",
     "MemoryLow=1536M",
     "OOMScoreAdjust=100",
     "OOMPolicy=continue",

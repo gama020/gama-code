@@ -147,7 +147,7 @@ it.live.each(
           assert.include(provider, 'base_url="https://api.openai.com/v1"');
           assert.include(provider, 'model_catalog_url="https://api.openai.com/v1/models"');
           assert.notInclude(provider, "env_key");
-          assert.include(provider, "refresh_interval_ms=0");
+          assert.include(provider, "refresh_interval_ms=300000");
           // regression: #16132 Codex fetches each token through this helper, so a running
           // session picks up renewals instead of keeping the token it launched with.
           if (source === "managed" && account === "primary") {

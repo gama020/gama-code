@@ -125,8 +125,11 @@ export function renderBootServiceUnit(plan: BootServicePlan): string {
     "Restart=always",
     "RestartSec=5",
     // Weights favor the server over the sibling agents slice; IOWeight needs a delegated io controller.
-    "CPUWeight=1000",
-    "IOWeight=1000",
+    // Stays at 100 because uresourced (Fedora/GNOME) enforces CPUWeight=IOWeight=100 on this unit: asking
+    // for 1000 made it rewrite the runtime drop-in on every change, and each write re-triggered uresourced
+    // in a SetUnitProperties loop that pinned the user manager near 100% CPU and starved agent scopes.
+    "CPUWeight=100",
+    "IOWeight=100",
     // Reclaim takes the agents' unprotected pages first. The kernel caps this at the
     // protection of user.slice and user@.service, which only root can grant.
     "MemoryLow=1536M",

@@ -179,7 +179,7 @@ const providerInstance = (instanceId: string, usedPercent: number): ProviderInst
     snapshot: { getSnapshot: Effect.succeed(providerSnapshot(instanceId, usedPercent)) },
   }) as unknown as ProviderInstance;
 
-const armedThread = (thread: ProjectionStore.ProjectionLimitRecoveryCandidate) => ({
+const armedThread = (thread: ProjectionStore.ProjectionLimitRecoveryTarget) => ({
   ...thread,
   limitRecovery: {
     runId: thread.latestRunId!,
@@ -225,7 +225,9 @@ describe("quota recovery rotation", () => {
     Effect.gen(function* () {
       yield* TestClock.setTime(nowMs);
       const commands = yield* Queue.unbounded<OrchestrationV2ServerCommand>();
-      const candidates = yield* Ref.make([armedThread(failedThread(6 * HOUR_MS, HOUR_MS))]);
+      const candidates = yield* Ref.make<
+        ReadonlyArray<ProjectionStore.ProjectionLimitRecoveryTarget>
+      >([armedThread(failedThread(6 * HOUR_MS, HOUR_MS))]);
       const layer = recoveryLayer({
         candidates,
         commands,
@@ -246,7 +248,9 @@ describe("quota recovery rotation", () => {
     Effect.gen(function* () {
       yield* TestClock.setTime(nowMs);
       const commands = yield* Queue.unbounded<OrchestrationV2ServerCommand>();
-      const candidates = yield* Ref.make([armedThread(failedThread(6 * HOUR_MS, HOUR_MS))]);
+      const candidates = yield* Ref.make<
+        ReadonlyArray<ProjectionStore.ProjectionLimitRecoveryTarget>
+      >([armedThread(failedThread(6 * HOUR_MS, HOUR_MS))]);
       const layer = recoveryLayer({
         candidates,
         commands,
