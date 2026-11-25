@@ -2495,6 +2495,9 @@ export const stageBrowserSecret = Effect.fn("stageBrowserSecret")(function* (inp
   );
 });
 
+// Read at module load so Effect code never touches process.env directly.
+const skipAppleSpeech = process.env.T3_SKIP_APPLE_SPEECH === "1";
+
 export const stageAppleSpeech = Effect.fn("stageAppleSpeech")(function* (input: {
   readonly repoRoot: string;
   readonly stageResourcesDir: string;
@@ -2503,6 +2506,12 @@ export const stageAppleSpeech = Effect.fn("stageAppleSpeech")(function* (input: 
   readonly verbose: boolean;
 }) {
   if (input.platform !== "mac") return;
+  if (skipAppleSpeech) {
+    yield* Effect.log(
+      "Skipping the Apple Speech helper build (T3_SKIP_APPLE_SPEECH=1); dictation is unavailable in this artifact.",
+    );
+    return;
+  }
   const path = yield* Path.Path;
   yield* runCommand(
     ChildProcess.make(
