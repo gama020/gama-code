@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { useGT } from "gt-react";
 import {
   ChartNoAxesColumnIcon,
   HelpCircleIcon,
@@ -29,6 +30,7 @@ interface ActivityRailProps {
 }
 
 export function ActivityRail({ onHoverModule, onLeaveModule, className }: ActivityRailProps) {
+  const gt = useGT();
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
@@ -62,7 +64,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
   return (
     <aside
       data-slot="activity-rail"
-      aria-label="Barra de Atividades"
+      aria-label={gt("Activity bar")}
       className={cn(
         "relative z-30 flex h-full w-14 shrink-0 flex-col items-center py-2 select-none",
         "gama-rail text-white rounded-2xl ring-1 ring-white/10",
@@ -73,19 +75,19 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
       <div className="mb-2.5 grid size-7.5 place-items-center">
         <Link
           to="/"
-          aria-label="Gama Os Início"
+          aria-label={gt("Gama Os home")}
           className="grid size-7.5 place-items-center rounded-lg overflow-hidden transition-transform hover:scale-105 active:scale-95"
         >
           <img
             src="/favicon-32x32.png"
-            alt="Gama Os"
+            alt={gt("Gama Os")}
             className="size-5.5 rounded-md object-cover ring-1 ring-white/20 shadow-xs"
           />
         </Link>
       </div>
 
       {/* Primary Navigation Modules */}
-      <nav className="flex flex-col items-center gap-1" aria-label="Módulos Principais">
+      <nav className="flex flex-col items-center gap-1" aria-label={gt("Primary modules")}>
         {/* Conversas (Home) */}
         <Tooltip>
           <TooltipTrigger
@@ -93,7 +95,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
               <button
                 type="button"
                 data-active={isHomeActive}
-                aria-label="Conversas e Projetos"
+                aria-label={gt("Chats and projects")}
                 onClick={() => {
                   if (!open) {
                     setOpen(true);
@@ -111,7 +113,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
                 {hasActiveWorkingThread && (
                   <span
                     className="absolute top-2 right-2 size-2.5 text-gama-arc"
-                    aria-label="Agente executando"
+                    aria-label={gt("Agent running")}
                   >
                     <svg className="size-full animate-spin" viewBox="0 0 16 16" fill="none">
                       <circle
@@ -128,7 +130,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
               </button>
             }
           />
-          <TooltipPopup side="right">Conversas e Projetos</TooltipPopup>
+          <TooltipPopup side="right">{gt("Chats and projects")}</TooltipPopup>
         </Tooltip>
 
         {/* Hosted apps: each one is a full app in the rail, not a browser tab. */}
@@ -174,7 +176,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
                 <button
                   type="button"
                   data-active={isPrActive}
-                  aria-label="Pull Requests"
+                  aria-label={gt("Pull requests")}
                   onClick={() => {
                     if (!open) setOpen(true);
                     void navigate({
@@ -196,7 +198,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
                 </button>
               }
             />
-            <TooltipPopup side="right">Pull Requests</TooltipPopup>
+            <TooltipPopup side="right">{gt("Pull requests")}</TooltipPopup>
           </Tooltip>
         ) : null}
 
@@ -207,7 +209,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
               <button
                 type="button"
                 data-active={isUsageActive}
-                aria-label="Uso de Tokens"
+                aria-label={gt("Token usage")}
                 onClick={() => {
                   if (!open) setOpen(true);
                   void navigate({ to: "/usage" });
@@ -226,7 +228,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
               </button>
             }
           />
-          <TooltipPopup side="right">Uso e Custos</TooltipPopup>
+          <TooltipPopup side="right">{gt("Usage and costs")}</TooltipPopup>
         </Tooltip>
 
         {/* Separador */}
@@ -238,7 +240,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
             render={
               <button
                 type="button"
-                aria-label="Nova Conversa"
+                aria-label={gt("New chat")}
                 onClick={handleStartNewChat}
                 className={cn(
                   "relative grid size-9.5 place-items-center rounded-xl transition-all duration-150 cursor-pointer",
@@ -250,12 +252,15 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
               </button>
             }
           />
-          <TooltipPopup side="right">Novo Chat (Cmd+N)</TooltipPopup>
+          <TooltipPopup side="right">{gt("New chat (Cmd+N)")}</TooltipPopup>
         </Tooltip>
       </nav>
 
       {/* Bottom Utility Items */}
-      <div className="mt-auto flex flex-col items-center gap-1 pt-2" aria-label="Ações de Suporte">
+      <div
+        className="mt-auto flex flex-col items-center gap-1 pt-2"
+        aria-label={gt("Support actions")}
+      >
         {/* Ajustes */}
         <Tooltip>
           <TooltipTrigger
@@ -263,7 +268,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
               <button
                 type="button"
                 data-active={isSettingsActive}
-                aria-label="Configurações"
+                aria-label={gt("Settings")}
                 onClick={() => {
                   if (!open) setOpen(true);
                   void navigate({ to: "/settings" });
@@ -280,7 +285,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
               </button>
             }
           />
-          <TooltipPopup side="right">Configurações</TooltipPopup>
+          <TooltipPopup side="right">{gt("Settings")}</TooltipPopup>
         </Tooltip>
 
         {/* Ajuda / Atalhos */}
@@ -289,7 +294,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
             render={
               <button
                 type="button"
-                aria-label="Paleta de Comandos e Atalhos"
+                aria-label={gt("Command palette and shortcuts")}
                 onClick={() => openCommandPalette()}
                 className="grid size-9.5 place-items-center rounded-xl text-gama-muted transition-all duration-150 hover:bg-white/5 hover:text-gama-hover cursor-pointer"
               >
@@ -297,7 +302,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
               </button>
             }
           />
-          <TooltipPopup side="right">Atalhos e Comandos (Cmd+K)</TooltipPopup>
+          <TooltipPopup side="right">{gt("Shortcuts and commands (Cmd+K)")}</TooltipPopup>
         </Tooltip>
 
         {/* User Avatar */}
@@ -309,7 +314,7 @@ export function ActivityRail({ onHoverModule, onLeaveModule, className }: Activi
               </div>
             }
           />
-          <TooltipPopup side="right">Perfil Gama</TooltipPopup>
+          <TooltipPopup side="right">{gt("Gama profile")}</TooltipPopup>
         </Tooltip>
       </div>
     </aside>

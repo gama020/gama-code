@@ -39,7 +39,7 @@ describe("localNetworkHint", () => {
   };
 
   it("explains a macOS local-network block for a private host", () => {
-    expect(localNetworkHint({ ...blocked, isMacosClient: true })).toContain("Rede Local");
+    expect(localNetworkHint({ ...blocked, isMacosClient: true })).toContain("Local Network");
   });
 
   it("stays quiet off macOS, off the local network, and for unrelated failures", () => {

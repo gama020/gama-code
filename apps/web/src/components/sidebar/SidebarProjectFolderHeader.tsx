@@ -2,6 +2,7 @@ import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/model
 import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environment";
 import type { ContextMenuSource } from "@t3tools/contracts";
 import { ChevronDownIcon, FolderIcon, FolderOpenIcon, PlusIcon } from "lucide-react";
+import { msg, T, useGT, useMessages, Var } from "gt-react";
 import { memo } from "react";
 
 import { cn } from "~/lib/utils";
@@ -12,7 +13,6 @@ import { resolveSidebarFolderDot, resolveThreadLastVisitedAt } from "../Sidebar.
 import { ProjectFavicon } from "../ProjectFavicon";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
-import { useTranslation } from "../../i18n";
 
 const FOLDER_DOT_CLASS_NAME = {
   attention: "bg-warning ring-2 ring-warning/30",
@@ -22,10 +22,10 @@ const FOLDER_DOT_CLASS_NAME = {
 } as const;
 
 const FOLDER_DOT_LABEL = {
-  attention: ", precisa de atenção",
-  failed: ", falhou",
-  unread: ", concluído",
-  working: ", trabalhando",
+  attention: msg(", needs you", { $context: "project folder status, read after its name" }),
+  failed: msg(", failed", { $context: "project folder status, read after its name" }),
+  unread: msg(", done", { $context: "project folder status, read after its name" }),
+  working: msg(", working", { $context: "project folder status, read after its name" }),
 } as const;
 
 /** The folder's sidebar tree row; its thread rows name it as their parent. */
@@ -51,6 +51,8 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
     source: ContextMenuSource,
   ) => void;
 }) {
+  const gt = useGT();
+  const m = useMessages();
   const { group, collapsed, hiddenThreads, totalThreadsCount } = props;
   const rowId = sidebarFolderRowId(group.projectKey);
   const localLastVisitedAtById = useUiStateStore((state) => state.threadLastVisitedAtById);
@@ -67,12 +69,6 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
         })),
       )
     : null;
-  const { t } = useTranslation();
-  const newThreadInFolderText = t(
-    "sidebar.newThreadInProjectNamed",
-    `Nova conversa em ${group.displayName}`,
-    { name: group.displayName },
-  );
   const totalCount = totalThreadsCount ?? (collapsed ? hiddenThreads.length : 0);
 
   return (
@@ -118,7 +114,7 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
         </span>
         {group.environmentPresence === "local-only" ? (
           <span className="shrink-0 text-3xs text-muted-foreground/60 font-medium group-hover/project-folder:opacity-0 pointer-coarse:opacity-0 transition-opacity">
-            Local
+            {gt("Local")}
           </span>
         ) : group.remoteEnvironmentLabels.length > 0 ? (
           <span className="shrink-0 inline-flex items-center gap-1 text-3xs text-muted-foreground/75 font-medium group-hover/project-folder:opacity-0 pointer-coarse:opacity-0 transition-opacity">
@@ -128,7 +124,7 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
         ) : null}
         {dot ? (
           <span className={cn("size-2 shrink-0 rounded-full", FOLDER_DOT_CLASS_NAME[dot])}>
-            <span className="sr-only">{FOLDER_DOT_LABEL[dot]}</span>
+            <span className="sr-only">{m(FOLDER_DOT_LABEL[dot])}</span>
           </span>
         ) : null}
         {totalCount > 0 ? (
@@ -145,14 +141,18 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
                 data-sidebar-action-for={rowId}
                 size="icon-xs"
                 variant="ghost-muted"
-                aria-label={newThreadInFolderText}
+                aria-label={gt("New thread in {project}", { project: group.displayName })}
                 onClick={() => props.onNewThread(group)}
               />
             }
           >
             <PlusIcon className="size-3.5" aria-hidden />
           </TooltipTrigger>
-          <TooltipPopup>{newThreadInFolderText}</TooltipPopup>
+          <TooltipPopup>
+            <T>
+              New thread in <Var>{group.displayName}</Var>
+            </T>
+          </TooltipPopup>
         </Tooltip>
       </span>
     </li>

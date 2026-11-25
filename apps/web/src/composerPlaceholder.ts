@@ -1,2 +1,3 @@
-export const DEFAULT_COMPOSER_PLACEHOLDER =
-  "Pergunte qualquer coisa. @ arquivos, $ skills, / comandos";
+import { msg } from "gt-react";
+
+export const DEFAULT_COMPOSER_PLACEHOLDER = msg("Ask anything. @ files, $ skills, / commands");

@@ -1,11 +1,26 @@
-import { ArrowLeftIcon, ChartNoAxesColumnIcon, ChevronDownIcon, SettingsIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ChartNoAxesColumnIcon,
+  ChevronDownIcon,
+  SettingsIcon,
+} from "lucide-react";
 import type { ReactNode } from "react";
+import { T, useGT } from "gt-react";
 import { memo } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 
+import { useAtomValue } from "@effect/atom-react";
 import { useEnvironmentIdentificationMode } from "../../hooks/useSettings";
+import { shortcutLabelForCommand } from "../../keybindings";
+import {
+  navigateHistory,
+  useCanNavigateHistory,
+  type HistoryDirection,
+} from "../../navigationHistory";
+import { primaryServerKeybindingsAtom } from "../../state/server";
 import { cn } from "../../lib/utils";
-import { usePullRequestsSupported } from "../../state/environments";
+import { useIssuesSupported, usePullRequestsSupported } from "../../state/environments";
 import { useProjects } from "../../state/entities";
 import { GamaBrandMark } from "../GamaBrandMark";
 import {
@@ -15,6 +30,7 @@ import {
   useEnvironmentStageLabel,
 } from "../SidebarStageBackdrop";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   SidebarFooter,
   SidebarMenu,
@@ -25,13 +41,14 @@ import {
 } from "../ui/sidebar";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { readPullRequestListPreferences } from "../pullRequest/pullRequestListPreferences";
+import { readIssueListPreferences } from "../issue/issueListPreferences";
+import { IssueGlyph } from "../issue/issuePresentation";
 import { isSidebarUtilityPage, useNavigateToMainApp } from "./mainAppLocation";
 import { SidebarThreadUndoNotice } from "./SidebarThreadUndoNotice";
 import { SidebarProviderUpdatePill } from "./SidebarProviderUpdatePill";
 import { SidebarUpdateArchitectureWarning, SidebarUpdatePill } from "./SidebarUpdatePill";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 import { observeResize } from "~/lib/observeResize";
-import { useTranslation } from "../../i18n";
 
 export const SidebarChromeHeader = memo(function SidebarChromeHeader({
   isElectron,
@@ -40,6 +57,7 @@ export const SidebarChromeHeader = memo(function SidebarChromeHeader({
 }) {
   const stageLabel = useEnvironmentStageLabel();
   const environmentIdentificationMode = useEnvironmentIdentificationMode();
+  const gt = useGT();
   const backdropVariant = resolveSidebarStageBackdropVariant(
     stageLabel,
     environmentIdentificationMode,
@@ -53,27 +71,39 @@ export const SidebarChromeHeader = memo(function SidebarChromeHeader({
 
   return (
     <>
-      {/* Mobile top header */}
       <div
         className={cn(
-          "relative flex h-[var(--workspace-topbar-height)] shrink-0 flex-row items-center gap-2 px-3 md:hidden",
+          "relative flex h-[var(--workspace-topbar-height)] shrink-0 flex-row items-center gap-2 pr-3",
           isElectron && "drag-region",
         )}
       >
         {backdropVariant ? <SidebarStageBackdrop variant={backdropVariant} /> : null}
-        <div className="relative top-[calc(var(--workspace-controls-top)-env(safe-area-inset-top))] z-10 ml-[calc(var(--workspace-controls-left)+1px-env(safe-area-inset-left))] flex shrink-0 items-center">
+        <div className="relative top-[calc(var(--workspace-controls-top)-env(safe-area-inset-top))] z-10 ml-[calc(var(--workspace-controls-left)+1px-env(safe-area-inset-left))] flex shrink-0 items-center md:hidden">
           <SidebarTrigger
             variant={backdropVariant ? "media-navigation" : "ghost"}
             className="relative top-auto translate-y-0"
-            aria-label="Toggle main sidebar"
+            aria-label={gt("Toggle main sidebar")}
           />
         </div>
-        <div className="relative z-10 flex h-8 min-w-0 flex-1 items-center justify-between gap-x-2 py-0.5">
-          <SidebarBrand onBackdrop={backdropVariant !== null} />
+        <div className="relative z-10 flex h-8 min-w-0 flex-1 flex-wrap content-start items-center gap-x-2 overflow-hidden py-0.5">
+          <div className="flex shrink-0 items-center gap-1">
+            <SidebarBrand onBackdrop={backdropVariant !== null} />
+            {isElectron ? (
+              <div className="hidden items-center md:flex">
+                <HistoryNavigationButton direction="back" onBackdrop={backdropVariant !== null} />
+                <HistoryNavigationButton
+                  direction="forward"
+                  onBackdrop={backdropVariant !== null}
+                />
+              </div>
+            ) : null}
+          </div>
           {pillLabel ? (
-            <Badge data-environment-identification="pill" size="sm" variant="secondary">
-              {pillLabel}
-            </Badge>
+            <div className="ml-1 flex h-7 items-center">
+              <Badge data-environment-identification="pill" size="sm" variant="secondary">
+                {pillLabel}
+              </Badge>
+            </div>
           ) : null}
         </div>
       </div>
@@ -118,10 +148,54 @@ export function SidebarBrandWidthProbe({
   );
 }
 
+function HistoryNavigationButton({
+  direction,
+  onBackdrop,
+}: {
+  direction: HistoryDirection;
+  onBackdrop: boolean;
+}) {
+  const keybindings = useAtomValue(primaryServerKeybindingsAtom);
+  const enabled = useCanNavigateHistory(direction);
+  const gt = useGT();
+  const label = direction === "back" ? gt("Go back") : gt("Go forward");
+  const shortcutLabel = shortcutLabelForCommand(
+    keybindings,
+    direction === "back" ? "navigation.back" : "navigation.forward",
+  );
+  const Icon = direction === "back" ? ArrowLeftIcon : ArrowRightIcon;
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={label}
+            className={cn(
+              "[-webkit-app-region:no-drag]",
+              onBackdrop && "relative top-auto translate-y-0",
+            )}
+            disabled={!enabled}
+            onClick={() => navigateHistory(direction)}
+            size="icon-sm"
+            variant={onBackdrop ? "media-navigation" : "ghost"}
+          />
+        }
+      >
+        <Icon className="size-3.5" />
+      </TooltipTrigger>
+      <TooltipPopup side="bottom">
+        {label}
+        {shortcutLabel ? ` (${shortcutLabel})` : ""}
+      </TooltipPopup>
+    </Tooltip>
+  );
+}
+
 function SidebarBrand({ onBackdrop }: { onBackdrop: boolean }) {
+  const gt = useGT();
   return (
     <Link
-      aria-label="Gama Os home"
+      aria-label={gt("Gama Os home")}
       className={cn(
         "relative z-10 ml-[var(--workspace-titlebar-content-left)] hidden h-7 w-fit min-w-0 shrink-0 items-center overflow-hidden rounded-md outline-hidden ring-ring focus-visible:ring-2 focus-visible:ring-inset md:flex",
         onBackdrop ? "text-white" : "text-foreground",
@@ -163,14 +237,15 @@ function SidebarUtilityItem({
 }
 
 const SidebarUtilityMenu = memo(function SidebarUtilityMenu() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const navigateToMainApp = useNavigateToMainApp();
+  const gt = useGT();
   const { isMobile, setOpenMobile } = useSidebar();
   const isOnUtilityPage = useLocation({
     select: (location) => isSidebarUtilityPage(location.pathname),
   });
   const pullRequestsSupported = usePullRequestsSupported();
+  const issuesSupported = useIssuesSupported();
   const closeMobileSidebar = () => {
     if (isMobile) {
       setOpenMobile(false);
@@ -182,6 +257,10 @@ const SidebarUtilityMenu = memo(function SidebarUtilityMenu() {
       to: "/pull-requests",
       search: readPullRequestListPreferences(),
     });
+  };
+  const handleIssuesClick = () => {
+    closeMobileSidebar();
+    void navigate({ to: "/issues", search: readIssueListPreferences() });
   };
   const handleSettingsClick = () => {
     closeMobileSidebar();
@@ -206,26 +285,35 @@ const SidebarUtilityMenu = memo(function SidebarUtilityMenu() {
         <SidebarMenuItem className="min-w-0 flex-1">
           <SidebarMenuButton onClick={handleBackClick}>
             <ArrowLeftIcon />
-            <span>{t("sidebar.back", "Back")}</span>
+            <span>
+              <T>Back</T>
+            </span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       ) : (
         <>
           <SidebarUtilityItem
             icon={<SettingsIcon />}
-            label={t("sidebar.settings", "Settings")}
+            label={gt("Settings")}
             onClick={handleSettingsClick}
           />
           {pullRequestsSupported ? (
             <SidebarUtilityItem
               icon={<PullRequestGlyph.pullRequest />}
-              label={t("sidebar.pullRequests", "Pull requests")}
+              label={gt("Pull requests")}
               onClick={handlePullRequestsClick}
+            />
+          ) : null}
+          {issuesSupported ? (
+            <SidebarUtilityItem
+              icon={<IssueGlyph.issue />}
+              label={gt("Issues", { $context: "sidebar link to the list of issues" })}
+              onClick={handleIssuesClick}
             />
           ) : null}
           <SidebarUtilityItem
             icon={<ChartNoAxesColumnIcon />}
-            label={t("sidebar.usage", "Usage")}
+            label={gt("Usage")}
             onClick={handleUsageClick}
           />
         </>
@@ -237,19 +325,11 @@ const SidebarUtilityMenu = memo(function SidebarUtilityMenu() {
 });
 
 export const SidebarChromeFooter = memo(function SidebarChromeFooter() {
-  const { isMobile } = useSidebar();
-
   return (
     <SidebarFooter>
-      <div className="flex h-8.5 shrink-0 items-center justify-between border-t border-white/5 px-2 text-2xs text-muted-foreground/70 select-none">
-        <div className="flex items-center gap-1.5 font-medium">
-          <span className="size-1.5 rounded-full bg-gama-green shadow-xs animate-pulse" />
-          <span>Local · conectado</span>
-        </div>
-      </div>
       <SidebarProviderUpdatePill />
       <SidebarUpdateArchitectureWarning />
-      {isMobile ? <SidebarUtilityMenu /> : null}
+      <SidebarUtilityMenu />
     </SidebarFooter>
   );
 });

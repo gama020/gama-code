@@ -5,6 +5,7 @@ import {
   hostedAppSurfacePartition,
 } from "@t3tools/contracts";
 import { useLocation } from "@tanstack/react-router";
+import { useGT } from "gt-react";
 import { ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
@@ -41,20 +42,25 @@ function surfaceHost(surface: HostedAppSurface): string {
 }
 
 function DesktopOnlyNotice({ surface }: { surface: HostedAppSurface }) {
+  const gt = useGT();
   return (
     <div className="grid h-full place-items-center bg-gama-canvas px-6">
       <div className="max-w-sm space-y-3 text-center">
-        <h1 className="text-sm font-medium text-foreground">{surface.title} roda no app desktop</h1>
+        <h1 className="text-sm font-medium text-foreground">
+          {gt("{name} runs in the desktop app", { name: surface.title })}
+        </h1>
         <p className="text-xs leading-relaxed text-gama-muted">
-          A versão web do Gama Os não pode hospedar {surface.title}: o serviço recusa ser exibido em
-          frame. Abra o endereço direto no navegador ou use o app desktop.
+          {gt(
+            "The Gama Os web app cannot host {name}: the service refuses to be shown in a frame. Open the address directly in your browser or use the desktop app.",
+            { name: surface.title },
+          )}
         </p>
         <button
           type="button"
           onClick={() => openInSystemBrowser(surface.url)}
           className="rounded-md border border-white/10 px-2.5 py-1.5 text-xs text-foreground hover:bg-white/5"
         >
-          Abrir {surfaceHost(surface)}
+          {gt("Open {host}", { host: surfaceHost(surface) })}
         </button>
       </div>
     </div>
@@ -69,6 +75,7 @@ export function HostedAppRoutePlaceholder({ surfaceId }: { surfaceId: string }) 
 }
 
 function HostedAppGuest({ surface }: { surface: HostedAppSurface }) {
+  const gt = useGT();
   const webviewRef = useRef<HTMLElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState<SurfaceFailure>(null);
@@ -92,11 +99,14 @@ function HostedAppGuest({ surface }: { surface: HostedAppSurface }) {
       const detail = event as DidFailLoadDetail;
       if (!detail.isMainFrame || detail.errorCode === ABORTED_LOAD_ERROR_CODE) return;
       setLoading(false);
-      setFailure({ description: detail.errorDescription || `Falha ao carregar ${surface.title}.` });
+      setFailure({
+        description:
+          detail.errorDescription || gt("Failed to load {name}.", { name: surface.title }),
+      });
     };
     const gone = () => {
       setLoading(false);
-      setFailure({ description: `O processo do ${surface.title} encerrou.` });
+      setFailure({ description: gt("The {name} process exited.", { name: surface.title }) });
     };
     webview.addEventListener("did-start-loading", start);
     webview.addEventListener("dom-ready", settle);
@@ -110,7 +120,7 @@ function HostedAppGuest({ surface }: { surface: HostedAppSurface }) {
       webview.removeEventListener("did-fail-load", fail);
       webview.removeEventListener("render-process-gone", gone);
     };
-  }, [surface.title]);
+  }, [gt, surface.title]);
 
   return (
     <>
@@ -127,7 +137,7 @@ function HostedAppGuest({ surface }: { surface: HostedAppSurface }) {
         <div className="ml-auto flex items-center gap-1">
           <button
             type="button"
-            aria-label={`Recarregar ${surface.title}`}
+            aria-label={gt("Reload {name}", { name: surface.title })}
             onClick={reload}
             className="grid size-6 place-items-center rounded-md text-gama-muted hover:bg-white/5 hover:text-foreground"
           >
@@ -135,7 +145,7 @@ function HostedAppGuest({ surface }: { surface: HostedAppSurface }) {
           </button>
           <button
             type="button"
-            aria-label={`Abrir ${surface.title} no navegador`}
+            aria-label={gt("Open {name} in the browser", { name: surface.title })}
             onClick={() => openInSystemBrowser(surface.url)}
             className="grid size-6 place-items-center rounded-md text-gama-muted hover:bg-white/5 hover:text-foreground"
           >
@@ -164,7 +174,9 @@ function HostedAppGuest({ surface }: { surface: HostedAppSurface }) {
           >
             <div className="flex flex-col items-center gap-3">
               <div className="size-5 animate-spin rounded-full border border-white/15 border-t-white/70" />
-              <span className="text-xs text-gama-muted">Conectando ao {surface.title}…</span>
+              <span className="text-xs text-gama-muted">
+                {gt("Connecting to {name}…", { name: surface.title })}
+              </span>
             </div>
           </div>
         ) : null}
@@ -173,7 +185,7 @@ function HostedAppGuest({ surface }: { surface: HostedAppSurface }) {
           <div className="absolute inset-0 grid place-items-center bg-gama-canvas px-6">
             <div className="max-w-sm space-y-3 text-center">
               <h1 className="text-sm font-medium text-foreground">
-                Não foi possível abrir o {surface.title}
+                {gt("Couldn't open {name}", { name: surface.title })}
               </h1>
               <p className="text-xs leading-relaxed text-gama-muted">{failure.description}</p>
               <div className="flex items-center justify-center gap-2">
@@ -182,14 +194,14 @@ function HostedAppGuest({ surface }: { surface: HostedAppSurface }) {
                   onClick={reload}
                   className="rounded-md border border-white/10 px-2.5 py-1.5 text-xs text-foreground hover:bg-white/5"
                 >
-                  Tentar novamente
+                  {gt("Try again")}
                 </button>
                 <button
                   type="button"
                   onClick={() => openInSystemBrowser(surface.url)}
                   className="rounded-md px-2.5 py-1.5 text-xs text-gama-muted hover:bg-white/5 hover:text-foreground"
                 >
-                  Abrir no navegador
+                  {gt("Open in browser")}
                 </button>
               </div>
             </div>

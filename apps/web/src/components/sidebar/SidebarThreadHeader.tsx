@@ -1,4 +1,5 @@
-import { FolderPlusIcon, SearchIcon, SquarePenIcon, XIcon } from "lucide-react";
+import { useGT } from "gt-react";
+import { SearchIcon, SquarePenIcon, XIcon } from "lucide-react";
 import {
   type ComponentProps,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -11,12 +12,10 @@ import { cn } from "~/lib/utils";
 import { Button } from "../ui/button";
 import { SidebarInput, SidebarMenuButton } from "../ui/sidebar";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
-import { useTranslation } from "../../i18n";
 
 export interface SidebarThreadHeaderProps {
   hasProjects: boolean;
   projectScope: ReactNode;
-  onNewProject: () => void;
   onNewThread: (event: ReactMouseEvent) => void;
   newThreadDisabled: boolean;
   newThreadShortcutLabel: string | null | undefined;
@@ -35,7 +34,6 @@ export interface SidebarThreadHeaderProps {
 export function SidebarThreadHeader({
   hasProjects,
   projectScope,
-  onNewProject,
   onNewThread,
   newThreadDisabled,
   newThreadShortcutLabel,
@@ -50,14 +48,13 @@ export function SidebarThreadHeader({
   activeSearchResultIndex,
   onClearSearch,
 }: SidebarThreadHeaderProps) {
-  const { t } = useTranslation();
+  const gt = useGT();
   const resultsVisible = isSearching && searchResultCount > 0;
   // Shrinking results can remove the active option; never leave aria-activedescendant pointing at it.
   const activeResultExists = resultsVisible && activeSearchResultIndex < searchResultCount;
-  const newThreadBase = t("sidebar.newThread", "New thread");
   const newThreadLabel = newThreadShortcutLabel
-    ? `${newThreadBase} (${newThreadShortcutLabel})`
-    : newThreadBase;
+    ? gt("New thread ({shortcut})", { shortcut: newThreadShortcutLabel })
+    : gt("New thread");
 
   return (
     <div className="flex items-center gap-1">
@@ -76,8 +73,8 @@ export function SidebarThreadHeader({
           value={searchQuery}
           onChange={(event) => onSearchQueryChange(event.currentTarget.value)}
           onKeyDown={onSearchKeyDown}
-          placeholder={t("sidebar.searchThreads", "Buscar conversas...")}
-          aria-label={t("sidebar.searchThreads", "Buscar conversas")}
+          placeholder={gt("Search", { $context: "search field placeholder" })}
+          aria-label={gt("Search threads")}
           role="combobox"
           aria-autocomplete="list"
           aria-expanded={resultsVisible}
@@ -95,7 +92,7 @@ export function SidebarThreadHeader({
             size="icon-micro"
             variant="ghost-muted"
             className="shrink-0 size-4"
-            aria-label="Limpar busca"
+            aria-label={gt("Clear thread search")}
             onClick={() => {
               onClearSearch();
               searchInputRef.current?.focus();
@@ -110,23 +107,19 @@ export function SidebarThreadHeader({
         )}
       </div>
       <div className="flex shrink-0 items-center">
-        {hasProjects ? (
-          <>
-            {projectScope}
-            <SidebarHeaderIconButton label="Add project" onClick={onNewProject}>
-              <FolderPlusIcon />
-            </SidebarHeaderIconButton>
-          </>
-        ) : null}
+        {hasProjects ? projectScope : null}
         <SidebarHeaderIconButton
-          label={newThreadBase}
+          label={gt("New thread")}
           tooltip={
             showNewThreadInProjectHint ? (
               <span className="flex flex-col gap-0.5">
                 <span>{newThreadLabel}</span>
                 <span className="text-muted-foreground">
-                  {t("sidebar.newThreadInProject", "New thread in current project")}: Shift+click
-                  {newThreadInProjectShortcutLabel ? ` (${newThreadInProjectShortcutLabel})` : ""}
+                  {newThreadInProjectShortcutLabel
+                    ? gt("New thread in current project: Shift+click ({shortcut})", {
+                        shortcut: newThreadInProjectShortcutLabel,
+                      })
+                    : gt("New thread in current project: Shift+click")}
                 </span>
               </span>
             ) : (

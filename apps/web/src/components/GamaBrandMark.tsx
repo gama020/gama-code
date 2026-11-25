@@ -17,6 +17,7 @@ export const GamaBrandMark = memo(function GamaBrandMark({
     >
       <img
         src="/favicon-32x32.png"
+        // oxlint-disable-next-line t3code/no-untranslated-copy -- brand name, not translatable
         alt="Gama Os"
         className="size-5 shrink-0 rounded-md ring-1 ring-white/15 object-cover"
       />
@@ -27,6 +28,7 @@ export const GamaBrandMark = memo(function GamaBrandMark({
             onBackdrop ? "text-white" : "text-foreground",
           )}
         >
+          {/* oxlint-disable-next-line t3code/no-untranslated-copy -- brand name, not translatable */}
           Gama
         </span>
         <span
@@ -35,6 +37,7 @@ export const GamaBrandMark = memo(function GamaBrandMark({
             onBackdrop ? "text-white/70" : "text-muted-foreground",
           )}
         >
+          {/* oxlint-disable-next-line t3code/no-untranslated-copy -- brand name, not translatable */}
           Os
         </span>
       </span>

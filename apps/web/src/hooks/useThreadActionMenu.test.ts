@@ -45,6 +45,7 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("../state/session", () => ({
   readEnvironmentScope: (environmentId: string, scope: string) =>
     scope === AuthOrchestrationOperateScope && state.granted.has(environmentId),
+  readEnvironmentScopeDenied: (environmentId: string) => !state.granted.has(environmentId),
 }));
 vi.mock("../state/entities", () => ({
   readEnvironmentServerConfigLoaded: () => true,
@@ -188,7 +189,7 @@ describe("thread menu permissions", () => {
     createMenu({ onFind }).openMenu(position);
     await state.completed.promise;
     const items = state.show.mock.calls[1]![0];
-    expect(items[0]).toMatchObject({ id: "find", label: "Buscar na conversa" });
+    expect(items[0]).toMatchObject({ id: "find", label: "Find in thread" });
     expect(items[0]?.disabled).not.toBe(true);
     expect(state.effects).toEqual(["find"]);
     expect(onFind).toHaveBeenCalledExactlyOnceWith(target);

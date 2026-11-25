@@ -1,4 +1,5 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as HostProcess from "@t3tools/shared/HostProcess";
 import { assert, describe, it } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -10,7 +11,7 @@ import * as Electron from "electron";
 import { vi } from "vite-plus/test";
 
 vi.mock("electron", () => ({
-  webContents: { getAllWebContents: vi.fn(() => []) },
+  webContents: { getAllWebContents: vi.fn(() => []), getFocusedWebContents: vi.fn() },
 }));
 
 import * as ElectronApp from "../electron/ElectronApp.ts";
@@ -18,13 +19,6 @@ import * as ElectronDialog from "../electron/ElectronDialog.ts";
 import * as ElectronMenu from "../electron/ElectronMenu.ts";
 import * as DesktopApplicationMenu from "./DesktopApplicationMenu.ts";
 import * as DesktopConfig from "../app/DesktopConfig.ts";
-
-/** The app menu ships localized (Gama Os renders PT-BR), so tests accept either label. */
-const findMenuItem = (
-  items: readonly Electron.MenuItemConstructorOptions[],
-  english: string,
-  portuguese: string,
-) => items.find((item) => item.label === english || item.label === portuguese);
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
 import * as DesktopUpdates from "../updates/DesktopUpdates.ts";
 import { createInitialDesktopUpdateState } from "../updates/updateMachine.ts";
@@ -121,13 +115,18 @@ const layerDesktopWindow = (selectedAction: Deferred.Deferred<string>) =>
 
 const layerElectronMenu = (
   applicationMenuTemplate: Deferred.Deferred<readonly Electron.MenuItemConstructorOptions[]>,
+  platform: NodeJS.Platform,
 ) =>
-  Layer.succeed(ElectronMenu.ElectronMenu, {
-    setApplicationMenu: (template) =>
-      Deferred.succeed(applicationMenuTemplate, template).pipe(Effect.asVoid),
-    popupTemplate: () => Effect.void,
-    showContextMenu: () => Effect.succeedNone,
-  } satisfies ElectronMenu.ElectronMenu["Service"]);
+  Layer.effect(
+    ElectronMenu.ElectronMenu,
+    ElectronMenu.make.pipe(
+      Effect.map((menu) => ({
+        ...menu,
+        setApplicationMenu: (template: readonly Electron.MenuItemConstructorOptions[]) =>
+          Deferred.succeed(applicationMenuTemplate, template).pipe(Effect.asVoid),
+      })),
+    ),
+  ).pipe(Layer.provide(Layer.succeed(HostProcess.Platform, platform)));
 
 const configureMenu = (
   selectedAction: Deferred.Deferred<string>,
@@ -141,7 +140,12 @@ const configureMenu = (
   }).pipe(
     Effect.provide(
       DesktopApplicationMenu.layer.pipe(
-        Layer.provideMerge(layerElectronMenu(applicationMenuTemplate)),
+        Layer.provideMerge(
+          layerElectronMenu(
+            applicationMenuTemplate,
+            environment.platform ?? environmentInput.platform,
+          ),
+        ),
         Layer.provideMerge(layerDesktopWindow(selectedAction)),
         Layer.provideMerge(layerDesktopUpdates(services)),
         Layer.provideMerge(layerElectronDialog(services)),
@@ -185,11 +189,7 @@ const checkForUpdatesFromMacMenu = (state: Partial<DesktopUpdateState>) =>
     if (!Array.isArray(appMenu?.submenu)) {
       throw new Error("Expected the macOS app menu submenu to be an array.");
     }
-    const checkForUpdates = findMenuItem(
-      appMenu.submenu,
-      "Check for Updates...",
-      "Verificar atualizações...",
-    );
+    const checkForUpdates = appMenu.submenu.find((item) => item.label === "Check for Updates...");
     if (typeof checkForUpdates?.click !== "function") {
       throw new Error("Expected Check for Updates... menu item to have a click handler.");
     }
@@ -207,36 +207,69 @@ const checkForUpdatesFromMacMenu = (state: Partial<DesktopUpdateState>) =>
     return yield* dialog.value;
   });
 
+const pressPasteAsText = (
+  template: readonly Electron.MenuItemConstructorOptions[],
+): ((focused: object) => void) => {
+  const editMenu = template.find((item) => item.label === "Edit");
+  if (!Array.isArray(editMenu?.submenu)) {
+    throw new Error("Expected Edit menu submenu to be an array.");
+  }
+  const pasteAsTextItem = editMenu.submenu.find((item) => item.label === "Paste as Text");
+  assert.equal(pasteAsTextItem?.accelerator, "CmdOrCtrl+Shift+V");
+  const click = pasteAsTextItem?.click;
+  if (typeof click !== "function") {
+    throw new Error("Expected Paste as Text menu item to have a click handler.");
+  }
+  return (focused) => {
+    using _focused = vi
+      .spyOn(Electron.webContents, "getFocusedWebContents")
+      .mockReturnValue(focused as Electron.WebContents);
+    click({} as Electron.MenuItem, undefined, {
+      triggeredByAccelerator: true,
+    } as unknown as KeyboardEvent);
+  };
+};
+
 describe("DesktopApplicationMenu", () => {
-  it.effect("leaves the accelerator to Chromium instead of injecting a paste", () =>
+  it.effect.each(["linux", "win32"] as const)(
+    "leaves the %s accelerator to Chromium instead of injecting a paste",
+    (platform) =>
+      Effect.gen(function* () {
+        const selectedAction = yield* Deferred.make<string>();
+        const applicationMenuTemplate =
+          yield* Deferred.make<readonly Electron.MenuItemConstructorOptions[]>();
+
+        yield* configureMenu(selectedAction, applicationMenuTemplate, { platform });
+
+        const focused = { isDestroyed: () => false, pasteAndMatchStyle: vi.fn() };
+        pressPasteAsText(yield* Deferred.await(applicationMenuTemplate))(focused);
+        assert.equal(focused.pasteAndMatchStyle.mock.calls.length, 0);
+        assert.isFalse(yield* Deferred.isDone(selectedAction));
+      }),
+  );
+
+  it.effect("pastes natively and synchronously for the macOS accelerator", () =>
     Effect.gen(function* () {
       const selectedAction = yield* Deferred.make<string>();
       const applicationMenuTemplate =
         yield* Deferred.make<readonly Electron.MenuItemConstructorOptions[]>();
 
-      yield* configureMenu(selectedAction, applicationMenuTemplate);
+      yield* configureMenu(selectedAction, applicationMenuTemplate, { platform: "darwin" });
+      const press = pressPasteAsText(yield* Deferred.await(applicationMenuTemplate));
 
-      const template = yield* Deferred.await(applicationMenuTemplate);
-      const editMenu = findMenuItem(template, "Edit", "Editar");
-      if (!Array.isArray(editMenu?.submenu)) {
-        throw new Error("Expected Edit menu submenu to be an array.");
-      }
-      const pasteAsTextItem = findMenuItem(
-        editMenu.submenu,
-        "Paste as Text",
-        "Colar como texto simples",
-      );
-      if (typeof pasteAsTextItem?.click !== "function") {
-        throw new Error("Expected Paste as Text menu item to have a click handler.");
-      }
+      const host = { isDestroyed: () => false, pasteAndMatchStyle: vi.fn() };
+      press(host);
+      assert.equal(host.pasteAndMatchStyle.mock.calls.length, 1);
 
-      pasteAsTextItem.click(
-        {} as Electron.MenuItem,
-        {} as Electron.BrowserWindow,
-        {
-          triggeredByAccelerator: true,
-        } as unknown as KeyboardEvent,
-      );
+      // Electron reports a mounted preview guest as focused while the host's composer has focus.
+      const guest = {
+        isDestroyed: () => false,
+        pasteAndMatchStyle: vi.fn(),
+        hostWebContents: host,
+      };
+      press(guest);
+      assert.equal(host.pasteAndMatchStyle.mock.calls.length, 2);
+      assert.equal(guest.pasteAndMatchStyle.mock.calls.length, 0);
       assert.isFalse(yield* Deferred.isDone(selectedAction));
     }),
   );
@@ -250,7 +283,7 @@ describe("DesktopApplicationMenu", () => {
       yield* configureMenu(selectedAction, applicationMenuTemplate, { platform: "darwin" });
 
       const template = yield* Deferred.await(applicationMenuTemplate);
-      const viewMenu = findMenuItem(template, "View", "Visualizar");
+      const viewMenu = template.find((item) => item.label === "View");
       assert.isDefined(viewMenu);
       if (!Array.isArray(viewMenu.submenu)) {
         throw new Error("Expected View menu submenu to be an array.");
@@ -348,11 +381,11 @@ describe("DesktopApplicationMenu", () => {
       yield* configureMenu(selectedAction, applicationMenuTemplate);
 
       const template = yield* Deferred.await(applicationMenuTemplate);
-      const viewMenu = findMenuItem(template, "View", "Visualizar");
+      const viewMenu = template.find((item) => item.label === "View");
       if (!Array.isArray(viewMenu?.submenu)) {
         throw new Error("Expected View menu submenu to be an array.");
       }
-      const reload = findMenuItem(viewMenu.submenu, "Reload", "Recarregar");
+      const reload = viewMenu.submenu.find((item) => item.label === "Reload");
       assert.equal(reload?.accelerator, "CmdOrCtrl+R");
       if (typeof reload?.click !== "function") {
         throw new Error("Expected Reload menu item to have a click handler.");
@@ -381,6 +414,31 @@ describe("DesktopApplicationMenu", () => {
         downloadPercent: 100,
       });
       assert.include(`${dialog.title ?? ""} ${dialog.message} ${dialog.detail ?? ""}`, "0.1.7");
+    }),
+  );
+
+  it.effect("labels every role item so the menu follows the UI language", () =>
+    Effect.gen(function* () {
+      // Electron's role defaults are English on every platform, so each role item needs a label.
+      for (const platform of ["darwin", "linux", "win32"] as const) {
+        const applicationMenuTemplate =
+          yield* Deferred.make<readonly Electron.MenuItemConstructorOptions[]>();
+        yield* configureMenu(yield* Deferred.make<string>(), applicationMenuTemplate, {
+          platform,
+        });
+
+        const unlabeled: string[] = [];
+        const collect = (template: readonly Electron.MenuItemConstructorOptions[]) => {
+          for (const item of template) {
+            if (item.role !== undefined && typeof item.label !== "string") {
+              unlabeled.push(item.role);
+            }
+            if (Array.isArray(item.submenu)) collect(item.submenu);
+          }
+        };
+        collect(yield* Deferred.await(applicationMenuTemplate));
+        assert.deepStrictEqual(unlabeled, [], platform);
+      }
     }),
   );
 });

@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useGT } from "gt-react";
 import {
   ArrowRightIcon,
   ChartNoAxesColumnIcon,
@@ -7,7 +8,7 @@ import {
   SettingsIcon,
   ShieldIcon,
   SlidersIcon,
-  SparklesIcon,
+  CpuIcon,
 } from "lucide-react";
 import { isThreadWorking } from "@t3tools/client-runtime/state/thread-inbox";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
@@ -37,6 +38,7 @@ export function RailFlyoutPreview({
 }: RailFlyoutPreviewProps) {
   const navigate = useNavigate();
   const threads = useThreadShells();
+  const gt = useGT();
   const projects = useProjects();
   const { setOpen } = useSidebar();
 
@@ -49,7 +51,7 @@ export function RailFlyoutPreview({
   return (
     <div
       role="region"
-      aria-label="Prévia rápida do módulo"
+      aria-label={gt("Module quick preview")}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       style={{ top: `${Math.max(12, positionTop - 20)}px`, left: "64px" }}
@@ -63,15 +65,17 @@ export function RailFlyoutPreview({
       {module === "home" && (
         <>
           <div className="flex items-center justify-between px-2 pb-2 border-b border-border/50">
-            <span className="text-xs font-semibold tracking-tight">Conversas</span>
-            <span className="text-2xs text-muted-foreground">{threads.length} total</span>
+            <span className="text-xs font-semibold tracking-tight">{gt("Chats")}</span>
+            <span className="text-2xs text-muted-foreground">
+              {gt("{count} total", { count: threads.length })}
+            </span>
           </div>
 
           <div className="flex flex-col gap-0.5 py-1.5">
             {recentThreads.length > 0 ? (
               recentThreads.map((thread) => {
                 const isWorking = isThreadWorking(thread);
-                const projectName = projectMap.get(thread.projectId) ?? "Projeto";
+                const projectName = projectMap.get(thread.projectId) ?? gt("Project");
                 return (
                   <button
                     key={scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id))}
@@ -94,7 +98,7 @@ export function RailFlyoutPreview({
                   >
                     <MessageSquareIcon className="size-3.5 shrink-0 text-muted-foreground" />
                     <span className="truncate flex-1 font-medium text-foreground">
-                      {thread.title || "Sem título"}
+                      {thread.title || gt("Untitled")}
                     </span>
                     <span className="text-3xs text-muted-foreground/80 shrink-0">
                       {projectName}
@@ -107,7 +111,7 @@ export function RailFlyoutPreview({
               })
             ) : (
               <div className="px-2 py-4 text-center text-xs text-muted-foreground">
-                Nenhuma conversa recente
+                {gt("No recent chats")}
               </div>
             )}
           </div>
@@ -120,7 +124,7 @@ export function RailFlyoutPreview({
             }}
             className="flex w-full items-center justify-between rounded-lg px-2 pt-1.5 text-xs font-medium text-gama-accent hover:opacity-80 transition-opacity cursor-pointer border-t border-border/40"
           >
-            <span>Ver todas as conversas</span>
+            <span>{gt("View all chats")}</span>
             <ArrowRightIcon className="size-3" />
           </button>
         </>
@@ -131,10 +135,10 @@ export function RailFlyoutPreview({
         <>
           <div className="flex items-center gap-2 px-2 pb-2 border-b border-border/50">
             <PullRequestGlyph.pullRequest className="size-3.5 text-gama-arc" />
-            <span className="text-xs font-semibold tracking-tight">Pull Requests</span>
+            <span className="text-xs font-semibold tracking-tight">{gt("Pull requests")}</span>
           </div>
           <p className="px-2 py-2 text-xs text-muted-foreground leading-relaxed">
-            Revise branches, diffs de código e envie revisões diretamente pelo app.
+            {gt("Review branches, code diffs and send reviews right from the app.")}
           </p>
           <button
             type="button"
@@ -147,7 +151,7 @@ export function RailFlyoutPreview({
             }}
             className="flex w-full items-center justify-between rounded-lg px-2 pt-1.5 text-xs font-medium text-gama-accent hover:opacity-80 transition-opacity cursor-pointer border-t border-border/40"
           >
-            <span>Abrir Pull Requests</span>
+            <span>{gt("Open pull requests")}</span>
             <ArrowRightIcon className="size-3" />
           </button>
         </>
@@ -158,10 +162,10 @@ export function RailFlyoutPreview({
         <>
           <div className="flex items-center gap-2 px-2 pb-2 border-b border-border/50">
             <ChartNoAxesColumnIcon className="size-3.5 text-gama-arc" />
-            <span className="text-xs font-semibold tracking-tight">Uso & Custos</span>
+            <span className="text-xs font-semibold tracking-tight">{gt("Usage & costs")}</span>
           </div>
           <p className="px-2 py-2 text-xs text-muted-foreground leading-relaxed">
-            Consumo detalhado de tokens, distribuição por provedor e métricas de execução.
+            {gt("Detailed token usage, per-provider breakdown and run metrics.")}
           </p>
           <button
             type="button"
@@ -171,7 +175,7 @@ export function RailFlyoutPreview({
             }}
             className="flex w-full items-center justify-between rounded-lg px-2 pt-1.5 text-xs font-medium text-gama-accent hover:opacity-80 transition-opacity cursor-pointer border-t border-border/40"
           >
-            <span>Abrir Dashboard de Uso</span>
+            <span>{gt("Open usage dashboard")}</span>
             <ArrowRightIcon className="size-3" />
           </button>
         </>
@@ -182,14 +186,14 @@ export function RailFlyoutPreview({
         <>
           <div className="flex items-center gap-2 px-2 pb-2 border-b border-border/50">
             <SettingsIcon className="size-3.5 text-gama-arc" />
-            <span className="text-xs font-semibold tracking-tight">Configurações</span>
+            <span className="text-xs font-semibold tracking-tight">{gt("Settings")}</span>
           </div>
           <div className="flex flex-col gap-0.5 py-1.5">
             {[
-              { icon: SlidersIcon, label: "Geral", to: "/settings/general" },
-              { icon: SparklesIcon, label: "Modelos & Provedores", to: "/settings/providers" },
-              { icon: PaletteIcon, label: "Aparência", to: "/settings/appearance" },
-              { icon: ShieldIcon, label: "Acesso & Segurança", to: "/settings/access" },
+              { icon: SlidersIcon, label: gt("General"), to: "/settings/general" },
+              { icon: CpuIcon, label: gt("Models & providers"), to: "/settings/providers" },
+              { icon: PaletteIcon, label: gt("Appearance"), to: "/settings/appearance" },
+              { icon: ShieldIcon, label: gt("Access & security"), to: "/settings/access" },
             ].map((item) => (
               <button
                 key={item.label}
@@ -213,7 +217,7 @@ export function RailFlyoutPreview({
             }}
             className="flex w-full items-center justify-between rounded-lg px-2 pt-1.5 text-xs font-medium text-gama-accent hover:opacity-80 transition-opacity cursor-pointer border-t border-border/40"
           >
-            <span>Ver todos os ajustes</span>
+            <span>{gt("View all settings")}</span>
             <ArrowRightIcon className="size-3" />
           </button>
         </>
